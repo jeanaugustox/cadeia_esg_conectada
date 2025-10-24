@@ -10,7 +10,7 @@ Bem-vindo ao nosso repositório! 🎉
 
 Desenvolver um sistema que conecte marcas e fornecedores alinhados com práticas ESG, facilitando conexões e parcerias responsáveis.
 
-### ⚙️ Funções
+### ⚙️ Estrutura
 
 O sistema permite cadastro de empresas, garantindo acessos por papéis (Admin, Editor, Leitor); envio de certificados ESG; exibição de perfis públicos com selo de verificação; listagem de empresas cadastradas com busca por critérios de setor, região e pilares ESG.
 
