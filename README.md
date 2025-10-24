@@ -1,16 +1,29 @@
-Projeto da disciplina Projetos 1 — Curso de Sistemas de Informação — CESAR School (Recife-PE)
-<br>
-<br>A "Cadeia ESG Conectada" é um sistema para conectar empresas e fornecedores alinhados a práticas ESG, com objetivo de criar conexões entre marcas com práticas sustentáveis.
-<br>
-<br>Equipe: Caique Assunção, Igor Aragão, Jean Augusto, Pedro Henrique
-<br>
-<br>Estrutura do repositório:
-<br>├─ Src/
-<br>│  ├─ app.py           # loop principal / menu
-<br>│  ├─ auth.py          # autenticação (login/recuperar senha)
-<br>│  ├─ certificado/     # módulo(s) de certificados ESG
-<br>│  ├─ empresas.py      # CRUD de empresas/fornecedores
-<br>│  └─ usuarios.py      # CRUD de usuários
-<br>└─ Data/
-<br>   ├─ empresas.json    # base local de empresas/fornecedores
-<br>   └─ usuarios.json    # base local de usuários
+﻿# 🌐 Cadeia ESG Conectada
+
+Bem-vindo ao nosso repositório! 🎉
+
+---
+
+## Sobre o projeto
+
+### 🎯 Objetivo
+
+Desenvolver um sistema que conecte marcas e fornecedores alinhados com práticas ESG, facilitando conexões e parcerias responsáveis.
+
+### ⚙️ Funções
+
+O sistema permite cadastro de empresas, garantindo acessos por papéis (Admin, Editor, Leitor); envio de certificados ESG; exibição de perfis públicos com selo de verificação; listagem de empresas cadastradas com busca por critérios de setor, região e pilares ESG.
+
+### 🚀 Equipe
+
+- Caique Assunção
+- Igor Aragão
+- Jean Augusto
+- Pedro Henrique
+
+---
+
+### 🔗 Confira o nosso site
+```bash
+https://sites.google.com/cesar.school/grupo-8-si/
+```
