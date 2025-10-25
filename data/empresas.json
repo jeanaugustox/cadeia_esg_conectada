@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": 1,
+    "nome_empresa": "Tech Verde Ltda",
+    "cnpj": "12.345.678/0001-90",
+    "contato_empresarial": "(11) 99999-9999",
+    "email_empresarial": "contato@techverde.com.br",
+    "nome_responsavel": "João Silva",
+    "cpf_responsavel": "123.456.789-00",
+    "outro_contato": "(11) 88888-8888",
+    "nome_usuario": "joao.silva",
+    "senha": "senha123",
+    "endereco": {
+      "cep": "01234-567",
+      "logradouro": "Rua das Flores, 123",
+      "numero": "123",
+      "complemento": "Sala 45",
+      "bairro": "Centro",
+      "cidade": "São Paulo",
+      "estado": "SP"
+    },
+    "observacoes": "Empresa focada em soluções sustentáveis",
+    "data_cadastro": "15/12/2024 10:30:00",
+    "ativo": true
+  }
+]
