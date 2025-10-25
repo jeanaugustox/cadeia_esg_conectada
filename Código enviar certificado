@@ -1,0 +1,23 @@
+print( "=" * 15 + "Cadeia ESG Conectada" + "=" * 15) 
+print("Bem-vindo(a) à plataforma ESG Conectada! ")
+print("\nPreencha Abaixo os requisitos para enviar a sua certificação ")
+certificado = input("Digite o nome do seu certificado ESG: ").title()
+categoria = input("Digite a categoria do seu certificado: ").title()
+emitido = input("Digite onde foi emitido (Fonte oficial): ").title()
+validade = input("Digite a data de validade: ")
+emissao = input("Digite a data de emissão: ")
+print(f"\nDe acordo com as informações fornecidas: \nO nome do seu certificado é {certificado} \nDa categoria {categoria} \nEmitido por {emitido} \nEmissão em {emissao} \nVálido até {validade}")
+print("Obrigado por preencher os dados do seu certificado! ")
+opcao = input("Você confirma a conformidade e validade das informações? (S/N): ")
+if opcao == "s" or opcao == "S":
+    print("Certificado enviado com Sucesso! ")
+    observacao = input("Deseja destacar alguma observação? (S/N): ").capitalize()
+    if observacao == "s" or observacao == "S":
+        detalhe = input("Digite a sua observação: ")
+        print(f"Sua observação foi registrada com Sucesso!")
+    else:
+        print("Nenhuma observação registrada, Obrigado!")
+else:
+      print("Operação cancelada. Por favor revise os dados.")
+print("Obrigado por utilizar a plataforma ESG Conectada!")
+
