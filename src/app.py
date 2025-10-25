@@ -4,7 +4,7 @@ from empresas import menu_empresas
 def menu_principal():
     while True:
         print("\n" + "="*60)
-        print("🌐 CADEIA ESG CONECTADA")
+        print("CADEIA ESG CONECTADA")
         print("="*60)
         print("1. Gerenciar Empresas")
         print("2. Gerenciar Usuários")
@@ -18,13 +18,13 @@ def menu_principal():
         if opcao == "1":
             menu_empresas()
         elif opcao == "2":
-            print("📋 Módulo de Usuários")
+            print("Módulo de Usuários")
             input("Pressione Enter para continuar...")
         elif opcao == "3":
-            print("📋 Módulo de Certificados")
+            print("Módulo de Certificados")
             input("Pressione Enter para continuar...")
         elif opcao == "4":
-            print("📋 Módulo de Autenticação")
+            print("Módulo de Autenticação")
             input("Pressione Enter para continuar...")
         elif opcao == "0":
             print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
@@ -36,5 +36,4 @@ def menu_principal():
 
 
 if __name__ == "__main__":
-    print("🚀 Iniciando Cadeia ESG Conectada...")
     menu_principal()

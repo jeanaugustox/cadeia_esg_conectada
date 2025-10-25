@@ -112,7 +112,7 @@ def listar_empresas():
         print("\n❌ Nenhuma empresa cadastrada.")
         return
 
-    print(f"\n📋 EMPRESAS CADASTRADAS ({len(empresas)} empresas)")
+    print(f"\nEMPRESAS CADASTRADAS ({len(empresas)} empresas)")
     print("-" * 80)
 
     for empresa in empresas:
@@ -142,7 +142,7 @@ def buscar_empresas_por_nome():
             empresas_encontradas.append(empresa)
 
     if empresas_encontradas:
-        print(f"🔍 EMPRESAS ENCONTRADAS ({len(empresas_encontradas)} empresas)")
+        print(f"EMPRESAS ENCONTRADAS ({len(empresas_encontradas)} empresas)")
         print("-" * 80)
         for empresa in empresas_encontradas:
             print(f"ID: {empresa['id']}")
@@ -162,7 +162,7 @@ def atualizar_empresa():
         print("❌ Empresa não encontrada!")
         return
 
-    print(f"\n✏️ EDITANDO: {empresa['nome_empresa']}")
+    print(f"\nEDITANDO EMPRESA: {empresa['nome_empresa']}")
     print("Deixe em branco para manter o valor atual.")
 
     novo_nome = input(f"Nome da Empresa [{empresa['nome_empresa']}]: ").strip()
@@ -189,7 +189,7 @@ def atualizar_empresa():
     if novo_usuario:
         empresa['nome_usuario'] = novo_usuario
 
-    print("\n✏️ EDITANDO: Endereço")
+    print("\nEDITANDO ENDEREÇO")
     novo_logradouro = input(
         f"Logradouro [{empresa['endereco']['logradouro']}]: ").title().strip()
     if novo_logradouro:
@@ -270,7 +270,7 @@ def excluir_empresa():
 def menu_empresas():
     while True:
         print("\n" + "="*50)
-        print("🏢 GESTÃO DE EMPRESAS")
+        print("MÓDULO DE EMPRESAS")
         print("="*50)
         print("1. Cadastrar Empresa")
         print("2. Listar Empresas")
