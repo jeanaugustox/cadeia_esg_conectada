@@ -1,5 +1,5 @@
 from empresas import menu_empresas
-
+from usuarios import menu_usuarios
 
 def menu_principal():
     while True:
@@ -18,8 +18,7 @@ def menu_principal():
         if opcao == "1":
             menu_empresas()
         elif opcao == "2":
-            print("Módulo de Usuários")
-            input("Pressione Enter para continuar...")
+            menu_usuarios()
         elif opcao == "3":
             print("Módulo de Certificados")
             input("Pressione Enter para continuar...")
