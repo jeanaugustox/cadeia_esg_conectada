@@ -78,3 +78,37 @@ def excluir_usuario():
     usuarios = [u for u in usuarios if u["id"] != uid]
     salvar_usuarios(usuarios)
     print(" Usuário removido com sucesso.")
+
+def menu_usuarios():
+    while True:
+        print("\n" + "="*50)
+        print("MÓDULO DE USUÁRIOS")
+        print("="*50)
+        print("1. Cadastrar Usuário")
+        print("2. Listar Usuários")
+        print("3. Editar Usuário")
+        print("4. Excluir Usuário")
+        print("5. Voltar ao Menu Principal")
+        print("0. Sair do Sistema")
+        print("-"*50)
+
+        opcao = input("Escolha uma opção: ").strip()
+
+        if opcao == "1":
+            cadastrar_usuario()
+        elif opcao == "2":
+            listar_usuarios()
+        elif opcao == "3":
+            editar_usuario()
+        elif opcao == "4":
+            excluir_usuario()
+        elif opcao == "5":
+            return  # Volta ao menu principal
+        elif opcao == "0":
+            print("Encerrando o sistema...")
+            break
+        else:
+            print("❌ Opção inválida! Tente novamente.")
+
+        input("\nPressione Enter para continuar...")
+
