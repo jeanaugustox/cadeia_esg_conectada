@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from datetime import datetime
 
 ARQUIVO_EMPRESAS = "data/empresas.json"
@@ -26,6 +27,8 @@ def salvar_empresas(empresas):
 
 def cadastrar_empresa():
     print("\n=== CADASTRO DE EMPRESA ===")
+
+    print(f"\nDADOS DA EMPRESA:")
 
     nome_empresa = input("Nome da Empresa: ").title().strip()
 
@@ -60,6 +63,7 @@ def cadastrar_empresa():
         print("Senha deve ter pelo menos 6 caracteres!")
         return False
 
+    print("\nENDEREÇO DA EMPRESA:")
     cep = input("CEP (xx.xxx-xxx): ").strip()
     logradouro = input("Logradouro: ").title().strip()
     numero = input("Número: ").strip()
@@ -113,7 +117,7 @@ def listar_empresas():
         return
 
     print(f"\nEMPRESAS CADASTRADAS ({len(empresas)} empresas)")
-    print("-" * 80)
+    print("-"*60)
 
     for empresa in empresas:
         empresa_ativa = empresa.get('ativo', True)
@@ -125,7 +129,20 @@ def listar_empresas():
         print(f"Responsável: {empresa['nome_responsavel']}")
         print(f"Data Cadastro: {empresa['data_cadastro']}")
         print(f"Status: {status}")
-        print("-" * 80)
+        print("-"*60)
+
+
+def buscar_empresa_por_id(empresa_id: int):
+    empresas = carregar_empresas()
+    empresa_encontrada = None
+
+    for empresa in empresas:
+        id_confere = empresa.get('id') == empresa_id
+        if id_confere:
+            empresa_encontrada = empresa
+            break
+
+    return empresa_encontrada
 
 
 def buscar_empresas_por_nome():
@@ -143,21 +160,27 @@ def buscar_empresas_por_nome():
 
     if empresas_encontradas:
         print(f"EMPRESAS ENCONTRADAS ({len(empresas_encontradas)} empresas)")
-        print("-" * 80)
+        print("-"*60)
         for empresa in empresas_encontradas:
             print(f"ID: {empresa['id']}")
             print(f"Nome: {empresa['nome_empresa']}")
             print(f"CNPJ: {empresa['cnpj']}")
             print(f"Email: {empresa['email_empresarial']}")
             print(f"Responsável: {empresa['nome_responsavel']}")
-            print("-" * 80)
+            print("-"*60)
     else:
         print("❌ Nenhuma empresa encontrada!")
 
 
 def atualizar_empresa():
-    empresa = buscar_empresa_por_cnpj()
+    try:
+        empresa_id = int(
+            input("Digite o ID da empresa que deseja atualizar: ").strip())
+    except ValueError:
+        print("❌ ID inválido!")
+        return
 
+    empresa = buscar_empresa_por_id(empresa_id)
     if not empresa:
         print("❌ Empresa não encontrada!")
         return
@@ -221,7 +244,7 @@ def atualizar_empresa():
 
     empresas = carregar_empresas()
     for i in range(len(empresas)):
-        if empresas[i]['id'] == empresa['id']:
+        if empresas[i].get('id') == empresa['id']:
             empresas[i] = empresa
             break
 
@@ -241,9 +264,7 @@ def excluir_empresa():
         print("❌ ID inválido!")
         return False
 
-    empresas = carregar_empresas()
-    empresa = next((emp for emp in empresas if emp['id'] == empresa_id and emp.get(
-        'ativo', True)), None)
+    empresa = buscar_empresa_por_id(empresa_id)
 
     if not empresa:
         print("❌ Empresa não encontrada!")
@@ -253,7 +274,12 @@ def excluir_empresa():
         f"\n⚠️ Tem certeza que deseja excluir '{empresa['nome_empresa']}'? (s/n): ").strip().lower()
 
     if confirmacao in ['s', 'sim']:
-        empresa['ativo'] = False
+        empresas = carregar_empresas()
+        for i in range(len(empresas)):
+            if empresas[i].get('id') == empresa_id:
+                empresas[i]['ativo'] = False
+                break
+
         if salvar_empresas(empresas):
             print(
                 f"✅ Empresa '{empresa['nome_empresa']}' excluída com sucesso!")
@@ -269,9 +295,9 @@ def excluir_empresa():
 
 def menu_empresas():
     while True:
-        print("\n" + "="*50)
+        print("\n" + "="*60)
         print("MÓDULO DE EMPRESAS")
-        print("="*50)
+        print("="*60)
         print("1. Cadastrar Empresa")
         print("2. Listar Empresas")
         print("3. Buscar Empresa por Nome")
@@ -279,7 +305,7 @@ def menu_empresas():
         print("5. Excluir Empresa")
         print("6. Voltar ao Menu Principal")
         print("0. Sair do Sistema")
-        print("-"*50)
+        print("-"*60)
 
         opcao = input("Escolha uma opção: ").strip()
 
@@ -296,8 +322,8 @@ def menu_empresas():
         elif opcao == "6":
             return
         elif opcao == "0":
-            break
+            print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+            sys.exit(0)
         else:
             print("❌ Opção inválida! Tente novamente.")
-
-        input("\nPressione Enter para continuar...")
+            input("\nPressione Enter para continuar...")

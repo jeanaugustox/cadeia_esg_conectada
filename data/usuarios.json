@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": 1,
+    "nome": "igoor",
+    "senha": "senha123",
+    "papel": "Admin",
+    "data_cadastro": "01/11/2025 07:52:50",
+    "ativo": true
+  }
+]
