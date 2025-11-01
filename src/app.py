@@ -1,5 +1,7 @@
 from empresas import menu_empresas
 from usuarios import menu_usuarios
+from auth import login, menu_auth
+
 
 def menu_principal():
     while True:
@@ -23,16 +25,15 @@ def menu_principal():
             print("Módulo de Certificados")
             input("Pressione Enter para continuar...")
         elif opcao == "4":
-            print("Módulo de Autenticação")
-            input("Pressione Enter para continuar...")
+            menu_auth(exibir_opcoes_navegacao=True)
         elif opcao == "0":
             print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
             break
         else:
             print("❌ Opção inválida! Tente novamente.")
-
-        input("\nPressione Enter para continuar...")
+            input("Pressione Enter para continuar...")
 
 
 if __name__ == "__main__":
-    menu_principal()
+    if menu_auth():
+        menu_principal()

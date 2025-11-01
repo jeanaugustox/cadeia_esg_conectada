@@ -1,96 +1,195 @@
-# Arquivo para CRUD de usuários 
 import json
 import os
+import sys
+from datetime import datetime
 
-ARQ_USUARIOS = "data/usuarios.json"
+ARQUIVO_USUARIOS = "data/usuarios.json"
+
 
 def carregar_usuarios():
-    if not os.path.exists(ARQ_USUARIOS):
+    try:
+        if not os.path.exists(ARQUIVO_USUARIOS):
+            return []
+        with open(ARQUIVO_USUARIOS, "r", encoding="utf-8") as arquivo:
+            return json.load(arquivo)
+    except Exception as e:
+        print(f"Erro ao carregar usuários: {e}")
         return []
-    with open(ARQ_USUARIOS, "r", encoding="utf-8") as f:
-        return json.load(f)
+
 
 def salvar_usuarios(usuarios):
-    with open(ARQ_USUARIOS, "w", encoding="utf-8") as f:
-        json.dump(usuarios, f, indent=4, ensure_ascii=False)
+    try:
+        with open(ARQUIVO_USUARIOS, "w", encoding="utf-8") as arquivo:
+            json.dump(usuarios, arquivo, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Erro ao salvar usuários: {e}")
+        return False
 
-# CREATE
+
 def cadastrar_usuario():
+    print("\n=== CADASTRO DE USUÁRIO ===")
+
     usuarios = carregar_usuarios()
     nome = input("Nome de usuário: ").strip()
-    if any(u["nome"] == nome for u in usuarios):
-        print(" Usuário já existe.")
-        return
-    senha = input("Senha: ").strip()
-    papel = input("Papel (Admin / Editor / Leitor): ").title().strip()
-    if papel not in ["Admin", "Editor", "Leitor"]:
-        print(" Papel inválido.")
-        return
-    usuarios.append({"id": len(usuarios)+1, "nome": nome, "senha": senha, "papel": papel})
-    salvar_usuarios(usuarios)
-    print(f" Usuário '{nome}' cadastrado com sucesso como {papel}.")
 
-# READ
+    if any(u.get("nome") == nome for u in usuarios):
+        print("❌ Usuário já existe!")
+        return False
+
+    email = input("Email: ").lower().strip()
+    senha = input("Senha: ").strip()
+    papeis_validos = ["Admin", "Editor", "Leitor"]
+    while True:
+        papel = input("Papel (Admin / Editor / Leitor): ").title().strip()
+        if papel in papeis_validos:
+            break
+        print("❌ Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+
+    novo_usuario = {
+        "id": len(usuarios) + 1,
+        "nome": nome,
+        "email": email,
+        "senha": senha,
+        "papel": papel,
+        "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        "ativo": True,
+    }
+
+    usuarios.append(novo_usuario)
+    if salvar_usuarios(usuarios):
+        print(f"\n✅ Usuário '{nome}' cadastrado com sucesso!")
+        return True
+    else:
+        print("❌ Erro ao salvar usuário!")
+        return False
+
+
 def listar_usuarios():
     usuarios = carregar_usuarios()
     if not usuarios:
-        print("Nenhum usuário cadastrado.")
+        print("\n❌ Nenhum usuário cadastrado.")
         return
-    print("\n=== Usuários Cadastrados ===")
+
+    print(f"\nUSUÁRIOS CADASTRADOS ({len(usuarios)} usuários)")
+    print("-"*60)
+
     for u in usuarios:
-        print(f"[{u['id']}] {u['nome']} ({u['papel']})")
+        usuario_ativo = u.get('ativo', True)
+        status = "✅ Ativo" if usuario_ativo else "❌ Inativo"
+        print(f"ID: {u['id']}")
+        print(f"Nome: {u['nome']}")
+        print(f"Papel: {u['papel']}")
+        if 'data_cadastro' in u:
+            print(f"Data Cadastro: {u['data_cadastro']}")
+        print(f"Status: {status}")
+        print("-"*60)
 
-# UPDATE
-def editar_usuario():
+
+def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     usuarios = carregar_usuarios()
-    listar_usuarios()
+    usuario_encontrado = None
+
+    for usuario in usuarios:
+        id_confere = usuario.get('id') == usuario_id
+        ativo_ok = incluir_inativos or usuario.get('ativo', True)
+        if id_confere and ativo_ok:
+            usuario_encontrado = usuario
+            break
+
+    return usuario_encontrado
+
+
+def atualizar_usuario():
     try:
-        uid = int(input("ID do usuário que deseja editar: "))
+        usuario_id = int(
+            input("Digite o ID do usuário que deseja atualizar: ").strip())
     except ValueError:
-        print("ID inválido.")
+        print("❌ ID inválido!")
         return
-    usuario = next((u for u in usuarios if u["id"] == uid), None)
+
+    usuario = buscar_usuario_por_id(usuario_id)
     if not usuario:
-        print("Usuário não encontrado.")
+        print("❌ Usuário não encontrado!")
         return
 
+    print("\nEDITANDO USUÁRIO")
     print("Deixe em branco para manter o valor atual.")
-    novo_nome = input(f"Novo nome ({usuario['nome']}): ").strip() or usuario["nome"]
-    nova_senha = input("Nova senha: ").strip() or usuario["senha"]
-    novo_papel = input(f"Novo papel ({usuario['papel']}): ").title().strip() or usuario["papel"]
 
-    usuario["nome"] = novo_nome
-    usuario["senha"] = nova_senha
-    usuario["papel"] = novo_papel
+    novo_nome = input(f"Nome ({usuario['nome']}): ").strip()
+    if novo_nome:
+        usuario['nome'] = novo_nome
 
-    salvar_usuarios(usuarios)
-    print(f"Usuário '{usuario['nome']}' atualizado com sucesso.")
+    nova_senha = input("Senha: ").strip()
+    if nova_senha:
+        usuario['senha'] = nova_senha
 
-# DELETE
-def excluir_usuario():
+    novo_papel = input(f"Papel ({usuario['papel']}): ").title().strip()
+    if novo_papel:
+        if novo_papel not in ["Admin", "Editor", "Leitor"]:
+            print("❌ Papel inválido.")
+            return
+        usuario['papel'] = novo_papel
+
     usuarios = carregar_usuarios()
-    listar_usuarios()
+    for i in range(len(usuarios)):
+        if usuarios[i].get('id') == usuario['id']:
+            usuarios[i] = usuario
+            break
+
+    if salvar_usuarios(usuarios):
+        print("✅ Usuário atualizado com sucesso!")
+    else:
+        print("❌ Erro ao salvar alterações!")
+
+
+def excluir_usuario():
     try:
-        uid = int(input("ID do usuário a excluir: "))
+        usuario_id = int(
+            input("Digite o ID do usuário que deseja excluir: ").strip())
     except ValueError:
-        print("ID inválido.")
-        return
-    usuarios = [u for u in usuarios if u["id"] != uid]
-    salvar_usuarios(usuarios)
-    print(" Usuário removido com sucesso.")
+        print("❌ ID inválido!")
+        return False
+
+    usuario = buscar_usuario_por_id(usuario_id)
+
+    if not usuario:
+        print("❌ Usuário não encontrado!")
+        return False
+
+    confirmacao = input(
+        f"\n⚠️ Tem certeza que deseja excluir '{usuario['nome']}'? (s/n): ").strip().lower()
+
+    if confirmacao in ['s', 'sim']:
+        usuarios = carregar_usuarios()
+        for i in range(len(usuarios)):
+            if usuarios[i].get('id') == usuario_id:
+                usuarios[i]['ativo'] = False
+                break
+
+        if salvar_usuarios(usuarios):
+            print(f"✅ Usuário '{usuario['nome']}' excluído com sucesso!")
+            return True
+        else:
+            print(f"❌ Erro ao excluir usuário '{usuario['nome']}'!")
+            return False
+    else:
+        print(f"❌ Operação cancelada para usuário '{usuario['nome']}'.")
+        return False
+
 
 def menu_usuarios():
     while True:
-        print("\n" + "="*50)
+        print("\n" + "="*60)
         print("MÓDULO DE USUÁRIOS")
-        print("="*50)
+        print("="*60)
         print("1. Cadastrar Usuário")
         print("2. Listar Usuários")
-        print("3. Editar Usuário")
+        print("3. Atualizar Usuário")
         print("4. Excluir Usuário")
         print("5. Voltar ao Menu Principal")
         print("0. Sair do Sistema")
-        print("-"*50)
+        print("-"*60)
 
         opcao = input("Escolha uma opção: ").strip()
 
@@ -99,16 +198,14 @@ def menu_usuarios():
         elif opcao == "2":
             listar_usuarios()
         elif opcao == "3":
-            editar_usuario()
+            atualizar_usuario()
         elif opcao == "4":
             excluir_usuario()
         elif opcao == "5":
-            return  # Volta ao menu principal
+            return
         elif opcao == "0":
-            print("Encerrando o sistema...")
-            break
+            print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+            sys.exit(0)
         else:
             print("❌ Opção inválida! Tente novamente.")
-
-        input("\nPressione Enter para continuar...")
-
+            input("\nPressione Enter para continuar...")

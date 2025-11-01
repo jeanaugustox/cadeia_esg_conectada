@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "nome_empresa": "Tech Verde Ltda",
+    "nome_empresa": "Tech Verde",
     "cnpj": "12.345.678/0001-90",
     "contato_empresarial": "(11) 99999-9999",
     "email_empresarial": "contato@techverde.com.br",
@@ -21,6 +21,30 @@
     },
     "observacoes": "Empresa focada em soluções sustentáveis",
     "data_cadastro": "15/12/2024 10:30:00",
+    "ativo": true
+  },
+  {
+    "id": 2,
+    "nome_empresa": "Nova Empresa",
+    "cnpj": "12123434324324",
+    "contato_empresarial": "123123123",
+    "email_empresarial": "novaempresa@gmail.com",
+    "nome_responsavel": "Igor",
+    "cpf_responsavel": "123123123",
+    "outro_contato": "",
+    "nome_usuario": "igoor",
+    "senha": "senha123",
+    "endereco": {
+      "cep": "123123123",
+      "logradouro": "1231231",
+      "numero": "123123123",
+      "complemento": "123123123",
+      "bairro": "3123123",
+      "cidade": "21312321",
+      "estado": "123123"
+    },
+    "observacoes": "123123123",
+    "data_cadastro": "01/11/2025 07:46:00",
     "ativo": true
   }
 ]
