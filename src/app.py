@@ -1,7 +1,7 @@
 from empresas import menu_empresas
 from usuarios import menu_usuarios
 from auth import login, menu_auth
-
+from chatbot import iniciar_chat  # ← Importa o chatbot
 
 def menu_principal():
     while True:
@@ -12,6 +12,7 @@ def menu_principal():
         print("2. Gerenciar Usuários")
         print("3. Gerenciar Certificados")
         print("4. Autenticação")
+        print("5. ChatBot de Ajuda")  # ← Nova opção
         print("0. Sair do Sistema")
         print("-"*60)
 
@@ -26,6 +27,8 @@ def menu_principal():
             input("Pressione Enter para continuar...")
         elif opcao == "4":
             menu_auth(exibir_opcoes_navegacao=True)
+        elif opcao == "5":
+            iniciar_chat()  # ← Chama o chat bot
         elif opcao == "0":
             print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
             break
