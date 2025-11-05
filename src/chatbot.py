@@ -1,6 +1,5 @@
 class ChatBot:
     def __init__(self):
-        # Base de conhecimento simples
         self.respostas = {
             "login": "Para fazer login, vá até a tela inicial e insira seu usuário e senha. Se não tiver conta, peça a um administrador para criar.",
             "cadastro": "O cadastro de empresas e usuários pode ser feito pelos administradores no menu principal.",
@@ -12,12 +11,9 @@ class ChatBot:
 
     def responder(self, mensagem: str) -> str:
         msg = mensagem.lower()
-
         for chave, resposta in self.respostas.items():
             if chave in msg:
                 return resposta
-
-        # Caso não encontre uma resposta
         return "Desculpe, não entendi. Você pode reformular a pergunta ou digitar 'ajuda' para ver as opções."
 
     def ajuda(self):
@@ -29,5 +25,23 @@ class ChatBot:
             "- Certificados\n"
             "- Problemas e erros comuns"
         )
+
+
+def iniciar_chat():
+    chatbot = ChatBot()
+    print("\n🤖 ChatBot de Ajuda - Cadeia ESG Conectada")
+    print("Digite 'sair' para encerrar o chat.\n")
+
+    while True:
+        msg = input("Você: ").strip().lower()
+        if msg == "sair":
+            print("ChatBot: Até logo! 👋")
+            break
+        elif msg == "ajuda":
+            print("ChatBot:", chatbot.ajuda())
+        else:
+            print("ChatBot:", chatbot.responder(msg))
+
+
 if __name__ == "__main__":
     iniciar_chat()
