@@ -1,5 +1,6 @@
 class ChatBot:
     def __init__(self):
+        # Base de respostas do chatbot
         self.respostas = {
             "login": "Para fazer login, vá até a tela inicial e insira seu usuário e senha. Se não tiver conta, peça a um administrador para criar.",
             "cadastro": "O cadastro de empresas e usuários pode ser feito pelos administradores no menu principal.",
@@ -23,7 +24,11 @@ class ChatBot:
             "- Cadastro de empresas\n"
             "- Usuários e permissões\n"
             "- Certificados\n"
-            "- Problemas e erros comuns"
+            "- Problemas e erros comuns\n"
+            "\n💡 Comandos úteis:\n"
+            "- Digite 'ajuda' para ver esta mensagem novamente\n"
+            "- Digite 'voltar' para retornar ao menu principal\n"
+            "- Digite 'sair' para encerrar o chat completamente"
         )
 
 
@@ -32,11 +37,18 @@ def iniciar_chat():
     print("\n🤖 ChatBot de Ajuda - Cadeia ESG Conectada")
     print("Digite 'sair' para encerrar o chat.\n")
 
+    # Mostra automaticamente as opções de ajuda ao iniciar
+    print("ChatBot:", chatbot.ajuda())
+    print("-" * 60)
+
     while True:
         msg = input("Você: ").strip().lower()
         if msg == "sair":
             print("ChatBot: Até logo! 👋")
             break
+        elif msg == "voltar":
+            print("ChatBot: Retornando ao menu principal...")
+            return  # ← Volta para o menu principal sem encerrar o sistema
         elif msg == "ajuda":
             print("ChatBot:", chatbot.ajuda())
         else:
