@@ -6,6 +6,27 @@ from datetime import datetime
 ARQUIVO_USUARIOS = "data/usuarios.json"
 
 
+# ===========================
+# 🔹 Funções utilitárias
+# ===========================
+
+class OperacaoCancelada(Exception):
+    """Exceção personalizada para cancelamento de operação."""
+    pass
+
+
+def input_cancelavel(mensagem: str) -> str:
+    """Input que permite o usuário digitar 'cancelar' ou 'sair' para interromper a operação."""
+    valor = input(mensagem).strip()
+    if valor.lower() in ["cancelar", "sair"]:
+        raise OperacaoCancelada
+    return valor
+
+
+# ===========================
+# 🔹 Funções de arquivo
+# ===========================
+
 def carregar_usuarios():
     try:
         if not os.path.exists(ARQUIVO_USUARIOS):
@@ -27,41 +48,51 @@ def salvar_usuarios(usuarios):
         return False
 
 
+# ===========================
+# 🔹 Funções principais
+# ===========================
+
 def cadastrar_usuario():
     print("\n=== CADASTRO DE USUÁRIO ===")
 
-    usuarios = carregar_usuarios()
-    nome = input("Nome de usuário: ").strip()
+    try:
+        usuarios = carregar_usuarios()
 
-    if any(u.get("nome") == nome for u in usuarios):
-        print("❌ Usuário já existe!")
-        return False
+        nome = input_cancelavel("Nome de usuário: ")
+        if any(u.get("nome") == nome for u in usuarios):
+            print("❌ Usuário já existe!")
+            return False
 
-    email = input("Email: ").lower().strip()
-    senha = input("Senha: ").strip()
-    papeis_validos = ["Admin", "Editor", "Leitor"]
-    while True:
-        papel = input("Papel (Admin / Editor / Leitor): ").title().strip()
-        if papel in papeis_validos:
-            break
-        print("❌ Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+        email = input_cancelavel("Email: ").lower()
+        senha = input_cancelavel("Senha: ")
 
-    novo_usuario = {
-        "id": len(usuarios) + 1,
-        "nome": nome,
-        "email": email,
-        "senha": senha,
-        "papel": papel,
-        "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        "ativo": True,
-    }
+        papeis_validos = ["Admin", "Editor", "Leitor"]
+        while True:
+            papel = input_cancelavel("Papel (Admin / Editor / Leitor): ").title()
+            if papel in papeis_validos:
+                break
+            print("❌ Papel inválido. Opções válidas: Admin, Editor, Leitor.")
 
-    usuarios.append(novo_usuario)
-    if salvar_usuarios(usuarios):
-        print(f"\n✅ Usuário '{nome}' cadastrado com sucesso!")
-        return True
-    else:
-        print("❌ Erro ao salvar usuário!")
+        novo_usuario = {
+            "id": len(usuarios) + 1,
+            "nome": nome,
+            "email": email,
+            "senha": senha,
+            "papel": papel,
+            "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            "ativo": True,
+        }
+
+        usuarios.append(novo_usuario)
+        if salvar_usuarios(usuarios):
+            print(f"\n✅ Usuário '{nome}' cadastrado com sucesso!")
+            return True
+        else:
+            print("❌ Erro ao salvar usuário!")
+            return False
+
+    except OperacaoCancelada:
+        print("\n❌ Operação cancelada pelo usuário.")
         return False
 
 
@@ -102,79 +133,88 @@ def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
 
 def atualizar_usuario():
     try:
-        usuario_id = int(
-            input("Digite o ID do usuário que deseja atualizar: ").strip())
+        usuario_id = int(input_cancelavel("Digite o ID do usuário que deseja atualizar: "))
+        usuario = buscar_usuario_por_id(usuario_id)
+        if not usuario:
+            print("❌ Usuário não encontrado!")
+            return
+
+        print("\nEDITANDO USUÁRIO")
+        print("Deixe em branco para manter o valor atual.")
+
+        novo_nome = input_cancelavel(f"Nome ({usuario['nome']}): ")
+        if novo_nome:
+            usuario['nome'] = novo_nome
+
+        nova_senha = input_cancelavel("Senha: ")
+        if nova_senha:
+            usuario['senha'] = nova_senha
+
+        novo_papel = input_cancelavel(f"Papel ({usuario['papel']}): ").title()
+        if novo_papel:
+            if novo_papel not in ["Admin", "Editor", "Leitor"]:
+                print("❌ Papel inválido.")
+                return
+            usuario['papel'] = novo_papel
+
+        usuarios = carregar_usuarios()
+        for i in range(len(usuarios)):
+            if usuarios[i].get('id') == usuario['id']:
+                usuarios[i] = usuario
+                break
+
+        if salvar_usuarios(usuarios):
+            print("✅ Usuário atualizado com sucesso!")
+        else:
+            print("❌ Erro ao salvar alterações!")
+
+    except OperacaoCancelada:
+        print("\n❌ Operação cancelada pelo usuário.")
+        return
     except ValueError:
         print("❌ ID inválido!")
         return
-
-    usuario = buscar_usuario_por_id(usuario_id)
-    if not usuario:
-        print("❌ Usuário não encontrado!")
-        return
-
-    print("\nEDITANDO USUÁRIO")
-    print("Deixe em branco para manter o valor atual.")
-
-    novo_nome = input(f"Nome ({usuario['nome']}): ").strip()
-    if novo_nome:
-        usuario['nome'] = novo_nome
-
-    nova_senha = input("Senha: ").strip()
-    if nova_senha:
-        usuario['senha'] = nova_senha
-
-    novo_papel = input(f"Papel ({usuario['papel']}): ").title().strip()
-    if novo_papel:
-        if novo_papel not in ["Admin", "Editor", "Leitor"]:
-            print("❌ Papel inválido.")
-            return
-        usuario['papel'] = novo_papel
-
-    usuarios = carregar_usuarios()
-    for i in range(len(usuarios)):
-        if usuarios[i].get('id') == usuario['id']:
-            usuarios[i] = usuario
-            break
-
-    if salvar_usuarios(usuarios):
-        print("✅ Usuário atualizado com sucesso!")
-    else:
-        print("❌ Erro ao salvar alterações!")
 
 
 def excluir_usuario():
     try:
-        usuario_id = int(
-            input("Digite o ID do usuário que deseja excluir: ").strip())
+        usuario_id = int(input_cancelavel("Digite o ID do usuário que deseja excluir: "))
     except ValueError:
         print("❌ ID inválido!")
         return False
+    except OperacaoCancelada:
+        print("\n❌ Operação cancelada pelo usuário.")
+        return False
 
     usuario = buscar_usuario_por_id(usuario_id)
-
     if not usuario:
         print("❌ Usuário não encontrado!")
         return False
 
-    confirmacao = input(
-        f"\n⚠️ Tem certeza que deseja excluir '{usuario['nome']}'? (s/n): ").strip().lower()
+    try:
+        confirmacao = input_cancelavel(
+            f"\n⚠️ Tem certeza que deseja excluir '{usuario['nome']}'? (s/n): "
+        ).lower()
 
-    if confirmacao in ['s', 'sim']:
-        usuarios = carregar_usuarios()
-        for i in range(len(usuarios)):
-            if usuarios[i].get('id') == usuario_id:
-                usuarios[i]['ativo'] = False
-                break
+        if confirmacao in ['s', 'sim']:
+            usuarios = carregar_usuarios()
+            for i in range(len(usuarios)):
+                if usuarios[i].get('id') == usuario_id:
+                    usuarios[i]['ativo'] = False
+                    break
 
-        if salvar_usuarios(usuarios):
-            print(f"✅ Usuário '{usuario['nome']}' excluído com sucesso!")
-            return True
+            if salvar_usuarios(usuarios):
+                print(f"✅ Usuário '{usuario['nome']}' excluído com sucesso!")
+                return True
+            else:
+                print(f"❌ Erro ao excluir usuário '{usuario['nome']}'!")
+                return False
         else:
-            print(f"❌ Erro ao excluir usuário '{usuario['nome']}'!")
+            print(f"❌ Operação cancelada para usuário '{usuario['nome']}'.")
             return False
-    else:
-        print(f"❌ Operação cancelada para usuário '{usuario['nome']}'.")
+
+    except OperacaoCancelada:
+        print("\n❌ Operação cancelada pelo usuário.")
         return False
 
 
