@@ -96,7 +96,8 @@ def cadastrar_empresa():
         },
         "observacoes": observacoes,
         "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        "ativo": True
+        "ativo": True,
+        "certificados": []
     }
 
     empresas.append(nova_empresa)
