@@ -58,13 +58,12 @@ python app.py
 ```
 
 O menu principal será exibido no terminal com as opções de:
-
 - Gerenciar Empresas
 - Gerenciar Usuários
 - Gerenciar Certificados
 - Autenticação
 
-## 1. Gestão de usuários (usuarios.py)
+### Gestão de usuários (usuarios.py)
 
 Cadastrar usuário com:
 - nome
@@ -74,7 +73,7 @@ Cadastrar usuário com:
 - Listar usuários cadastrados
 - Atualizar nome, senha e papel
 
-## 2. Gestão de empresas (empresas.py)
+### Gestão de empresas (empresas.py)
 
 Cadastrar empresa com dados como:
 - Nome da empresa
@@ -95,7 +94,7 @@ Validações:
 - Exclusão lógica: a empresa é marcada como inativa ("ativo": false)
 - As empresas são armazenadas em data/empresas.json, incluindo um array de certificados ESG associados
 
-## 3. Certificados ESG (certificados.py)
+### Certificados ESG (certificados.py)
 
 Funcionalidades:
 - Registrar novo certificado para uma empresa ativa, vinculando:
