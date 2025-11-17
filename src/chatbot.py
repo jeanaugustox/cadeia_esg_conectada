@@ -1,58 +1,102 @@
-class ChatBot:
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+class ChatBotIA:
     def __init__(self):
-        # Base de respostas do chatbot
-        self.respostas = {
-            "login": "Para fazer login, vá até a tela inicial e insira seu usuário e senha. Se não tiver conta, peça a um administrador para criar.",
-            "cadastro": "O cadastro de empresas e usuários pode ser feito pelos administradores no menu principal.",
-            "certificado": "O módulo de certificado serve para gerar e gerenciar certificados das empresas cadastradas.",
-            "empresa": "No menu de empresas, você pode cadastrar novas, editar ou consultar informações já registradas.",
-            "usuário": "Usuários são gerenciados pelo administrador, que pode definir permissões e acesso.",
-            "erro": "Se estiver enfrentando erros, tente reiniciar o sistema e verificar se o login está correto. Caso continue, contate o suporte."
-        }
+        # Frases que o modelo IA vai aprender a reconhecer
+        self.frases = [
+            "como faço login",
+            "não consigo entrar no sistema",
+            "problema no login",
+            "como cadastrar empresa",
+            "onde cadastro uma empresa",
+            "como registrar uma empresa",
+            "como cadastrar usuário",
+            "onde adiciono usuário",
+            "como criar novo usuário",
+            "como gerar certificado",
+            "para que serve certificado",
+            "como resolver erro",
+            "sistema dando erro",
+            "como navegar no sistema",
+            "me ajude",
+            "preciso de ajuda"
+        ]
+
+        # Respostas alinhadas EXATAMENTE com as frases acima
+        self.respostas = [
+            "Para fazer login, vá até a tela inicial e insira usuário e senha.",
+            "Verifique se seu usuário está ativo e a senha correta.",
+            "Se houver problema no login, tente redefinir sua senha ou contate o administrador.",
+            "No menu principal, acesse 'Gerenciar Empresas' para cadastrar.",
+            "Use a opção 'Gerenciar Empresas' no menu principal.",
+            "Você pode registrar uma empresa no módulo de Empresas.",
+            "Usuários são cadastrados no menu 'Gerenciar Usuários'.",
+            "Entre em 'Gerenciar Usuários' para adicionar novos usuários.",
+            "Somente administradores podem criar novos usuários.",
+            "Certificados são gerados no módulo 'Certificados'.",
+            "Certificados servem para validar empresas dentro do sistema ESG.",
+            "Verifique se preencheu tudo corretamente e tente novamente.",
+            "Reinicie o sistema e confira as informações inseridas.",
+            "Use o menu principal para acessar empresas, usuários e certificados.",
+            "Claro! Como posso te ajudar exatamente?",
+            "Estou aqui para ajudar. Pode explicar melhor sua dúvida?"
+        ]
+
+        # Criação do modelo IA
+        self.vectorizer = TfidfVectorizer()
+        self.vetores = self.vectorizer.fit_transform(self.frases)
+
 
     def responder(self, mensagem: str) -> str:
-        msg = mensagem.lower()
-        for chave, resposta in self.respostas.items():
-            if chave in msg:
-                return resposta
-        return "Desculpe, não entendi. Você pode reformular a pergunta ou digitar 'ajuda' para ver as opções."
+        mensagem_vec = self.vectorizer.transform([mensagem])
+        similaridades = cosine_similarity(mensagem_vec, self.vetores).flatten()
+
+        indice = similaridades.argmax()
+        grau = similaridades[indice]
+
+        # limiar para garantir que não responde lixo
+        if grau < 0.20:
+            return "Não entendi muito bem. Pode reformular sua pergunta?"
+
+        return self.respostas[indice]
+
 
     def ajuda(self):
         return (
             "Eu posso te ajudar com:\n"
             "- Login e autenticação\n"
             "- Cadastro de empresas\n"
-            "- Usuários e permissões\n"
+            "- Cadastro de usuários\n"
             "- Certificados\n"
-            "- Problemas e erros comuns\n"
-            "\n💡 Comandos úteis:\n"
-            "- Digite 'ajuda' para ver esta mensagem novamente\n"
-            "- Digite 'voltar' para retornar ao menu principal\n"
-            "- Digite 'sair' para encerrar o chat completamente"
+            "- Erros comuns\n\n"
+            "Comandos:\n"
+            "- 'ajuda'\n"
+            "- 'voltar'\n"
+            "- 'sair'"
         )
 
 
 def iniciar_chat():
-    chatbot = ChatBot()
-    print("\n🤖 ChatBot de Ajuda - Cadeia ESG Conectada")
-    print("Digite 'sair' para encerrar o chat.\n")
+    bot = ChatBotIA()
 
-    # Mostra automaticamente as opções de ajuda ao iniciar
-    print("ChatBot:", chatbot.ajuda())
+    print("\n🤖 ChatBot IA - Cadeia ESG Conectada")
+    print(bot.ajuda())
     print("-" * 60)
 
     while True:
         msg = input("Você: ").strip().lower()
+
         if msg == "sair":
             print("ChatBot: Até logo! 👋")
             break
         elif msg == "voltar":
-            print("ChatBot: Retornando ao menu principal...")
-            return  # ← Volta para o menu principal sem encerrar o sistema
+            print("ChatBot: Voltando ao menu principal...")
+            return
         elif msg == "ajuda":
-            print("ChatBot:", chatbot.ajuda())
+            print("ChatBot:", bot.ajuda())
         else:
-            print("ChatBot:", chatbot.responder(msg))
+            print("ChatBot:", bot.responder(msg))
 
 
 if __name__ == "__main__":
