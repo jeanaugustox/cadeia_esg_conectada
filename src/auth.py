@@ -1,4 +1,3 @@
-# Arquivo para metodos de login/recuperar senha
 import sys
 from usuarios import carregar_usuarios, salvar_usuarios, cadastrar_usuario
 

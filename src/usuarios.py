@@ -5,6 +5,7 @@ from datetime import datetime
 
 ARQUIVO_USUARIOS = "data/usuarios.json"
 
+# ================ CARREGAR USUÁRIOS ================ #
 
 def carregar_usuarios():
     try:
@@ -16,6 +17,7 @@ def carregar_usuarios():
         print(f"Erro ao carregar usuários: {e}")
         return []
 
+# ================ SALVAR USUÁRIOS ================ #
 
 def salvar_usuarios(usuarios):
     try:
@@ -26,25 +28,55 @@ def salvar_usuarios(usuarios):
         print(f"Erro ao salvar usuários: {e}")
         return False
 
+# ================ CADASTRAR USUÁRIOS ================ # 
 
 def cadastrar_usuario():
-    print("\n=== CADASTRO DE USUÁRIO ===")
+    print("\n" + "=" * 60)
+    print("CADASTRO DE USUÁRIO")
+    print("=" * 60)
 
     usuarios = carregar_usuarios()
-    nome = input("Nome de usuário: ").strip()
 
-    if any(u.get("nome") == nome for u in usuarios):
-        print("❌ Usuário já existe!")
-        return False
+    # Nome
+    while True:
+        nome = input("Nome de usuário: ").strip()
+        if not nome:
+            print("Digite um nome de usuário para prosseguir.")
+            continue
+        if any(u.get("nome") == nome for u in usuarios):
+            print("❌ Usuário já existe!")
+            return False
+        break
 
-    email = input("Email: ").lower().strip()
-    senha = input("Senha: ").strip()
+    # Email
+    while True:
+        email = input("Email: ").lower().strip()
+        if not email:
+            print("Digite o seu email para prosseguir.")
+            continue
+        break
+
+    # Senha
+    while True:
+        senha = input("Senha: ").strip()
+        if not senha:
+            print("Digite uma senha para prosseguir.")
+            continue
+        if len(senha) < 6:
+            print("Digite uma senha com 6 ou mais caracteres.")
+            continue
+        break
+    
+    # Papel
     papeis_validos = ["Admin", "Editor", "Leitor"]
     while True:
         papel = input("Papel (Admin / Editor / Leitor): ").title().strip()
+        if not papel:
+            print("Digite o papel para prosseguir. Papéis: Admin, Editor, Leitor.")
+            continue
         if papel in papeis_validos:
             break
-        print("❌ Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+        print("❌ Opção inválida. Tente novamente. Papéis: Admin, Editor, Leitor.")
 
     novo_usuario = {
         "id": len(usuarios) + 1,
@@ -64,6 +96,7 @@ def cadastrar_usuario():
         print("❌ Erro ao salvar usuário!")
         return False
 
+# ================ LISTAR USUÁRIOS ================ #
 
 def listar_usuarios():
     usuarios = carregar_usuarios()
@@ -85,6 +118,7 @@ def listar_usuarios():
         print(f"Status: {status}")
         print("-"*60)
 
+# ================ BUSCAR USUÁRIOS ================ #
 
 def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     usuarios = carregar_usuarios()
@@ -99,6 +133,7 @@ def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
 
     return usuario_encontrado
 
+# ================ ATUALIZAR USUÁRIOS ================ #
 
 def atualizar_usuario():
     try:
@@ -113,23 +148,68 @@ def atualizar_usuario():
         print("❌ Usuário não encontrado!")
         return
 
-    print("\nEDITANDO USUÁRIO")
+    print("\n" + "=" * 60)
+    print("ATUALIZAR USUÁRIO")
+    print("=" * 60)
     print("Deixe em branco para manter o valor atual.")
+    print(f"\nUsuário selecionado: {usuario['nome']} ({usuario['papel']})")
+    print("-" * 60)
 
-    novo_nome = input(f"Nome ({usuario['nome']}): ").strip()
+    nome_atual = usuario['nome']
+    papel_atual = usuario['papel']
+    senha_atual = usuario['senha']
+    alguma_alteracao = False
+
+    # Nome
+    novo_nome = input("Novo nome: ").strip()
     if novo_nome:
-        usuario['nome'] = novo_nome
+        if novo_nome == nome_atual:
+            print(f"Nome mantido como '{nome_atual}' (mesmo valor informado).")
+        else:
+            usuario['nome'] = novo_nome
+            alguma_alteracao = True
+            print(f"Nome atualizado de '{nome_atual}' para '{novo_nome}'.")
+    else:
+        print(f"Nome mantido como '{nome_atual}' (campo deixado em branco).")
 
-    nova_senha = input("Senha: ").strip()
-    if nova_senha:
+    # Senha
+    while True:
+        nova_senha = input("Nova senha: ").strip()
+        if not nova_senha:
+            print("Senha mantida (campo deixado em branco).")
+            break
+        if nova_senha == senha_atual:
+            print("Senha mantida (mesmo valor informado).")
+            break
+        if len(nova_senha) < 6:
+            print("Digite uma senha com 6 ou mais caracteres.")
+            continue
         usuario['senha'] = nova_senha
+        alguma_alteracao = True
+        print("Senha atualizada com sucesso.")
+        break
 
-    novo_papel = input(f"Papel ({usuario['papel']}): ").title().strip()
-    if novo_papel:
-        if novo_papel not in ["Admin", "Editor", "Leitor"]:
-            print("❌ Papel inválido.")
-            return
-        usuario['papel'] = novo_papel
+    # Papel
+    papeis_validos = ["Admin", "Editor", "Leitor"]
+    while True:
+        novo_papel = input("Escolha o papel (Admin, Editor, Leitor): ").title().strip()
+        if not novo_papel:
+            print(f"Papel mantido como '{papel_atual}' (campo deixado em branco).")
+            break
+        if novo_papel == papel_atual:
+            print(f"Papel mantido como '{papel_atual}' (mesmo valor informado).")
+            break
+        if novo_papel in papeis_validos:
+            usuario['papel'] = novo_papel
+            alguma_alteracao = True
+            print(f"Papel atualizado de '{papel_atual}' para '{novo_papel}'.")
+            break
+        else:
+            print("❌ Opção inválida. Tente novamente. Papéis: Admin, Editor, Leitor.")
+
+    if not alguma_alteracao:
+        print("\nNenhuma alteração realizada. As informações atuais foram mantidas.")
+        return
 
     usuarios = carregar_usuarios()
     for i in range(len(usuarios)):
@@ -142,7 +222,8 @@ def atualizar_usuario():
     else:
         print("❌ Erro ao salvar alterações!")
 
-
+# ================ EXCLUIR USUÁRIOS ================ #
+    
 def excluir_usuario():
     try:
         usuario_id = int(
@@ -177,6 +258,7 @@ def excluir_usuario():
         print(f"❌ Operação cancelada para usuário '{usuario['nome']}'.")
         return False
 
+# ================ MENU DE USUÁRIOS ================ #
 
 def menu_usuarios():
     while True:
