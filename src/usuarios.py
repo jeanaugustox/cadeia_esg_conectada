@@ -37,7 +37,7 @@ def cadastrar_usuario():
 
     usuarios = carregar_usuarios()
 
-    # Nome
+    # NOME
     while True:
         nome = input("Nome de usuário: ").strip()
         if not nome:
@@ -48,7 +48,7 @@ def cadastrar_usuario():
             return False
         break
 
-    # Email
+    # EMAIL
     while True:
         email = input("Email: ").lower().strip()
         if not email:
@@ -56,7 +56,7 @@ def cadastrar_usuario():
             continue
         break
 
-    # Senha
+    # SENHA
     while True:
         senha = input("Senha: ").strip()
         if not senha:
@@ -67,7 +67,7 @@ def cadastrar_usuario():
             continue
         break
     
-    # Papel
+    # PAPEL
     papeis_validos = ["Admin", "Editor", "Leitor"]
     while True:
         papel = input("Papel (Admin / Editor / Leitor): ").title().strip()
@@ -156,11 +156,12 @@ def atualizar_usuario():
     print("-" * 60)
 
     nome_atual = usuario['nome']
+    email_atual = usuario['email']
     papel_atual = usuario['papel']
     senha_atual = usuario['senha']
     alguma_alteracao = False
 
-    # Nome
+    # NOME
     novo_nome = input("Novo nome: ").strip()
     if novo_nome:
         if novo_nome == nome_atual:
@@ -172,7 +173,19 @@ def atualizar_usuario():
     else:
         print(f"Nome mantido como '{nome_atual}' (campo deixado em branco).")
 
-    # Senha
+    # EMAIL
+    novo_email = input("Novo email: ").lower().strip()
+    if novo_email:
+        if novo_email == email_atual:
+            print(f"Email mantido como '{email_atual}' (mesmo valor informado).")
+        else:
+            usuario['email'] = novo_email
+            alguma_alteracao = True
+            print(f"Email atualizado de '{email_atual}' para '{novo_email}'.")
+    else:
+        print(f"Email mantido como '{email_atual}' (campo deixado em branco).")
+
+    # SENHA
     while True:
         nova_senha = input("Nova senha: ").strip()
         if not nova_senha:
@@ -189,7 +202,7 @@ def atualizar_usuario():
         print("Senha atualizada com sucesso.")
         break
 
-    # Papel
+    # PAPEL
     papeis_validos = ["Admin", "Editor", "Leitor"]
     while True:
         novo_papel = input("Escolha o papel (Admin, Editor, Leitor): ").title().strip()
