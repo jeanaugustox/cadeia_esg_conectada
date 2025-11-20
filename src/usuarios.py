@@ -13,10 +13,15 @@ from utils import (
 
 ARQUIVO_USUARIOS = "data/usuarios.json"
 
+# ================ CARREGAR USUÁRIOS ================ #
+
 
 def carregar_usuarios():
     """Carrega usuários do arquivo JSON."""
     return carregar_arquivo_json(ARQUIVO_USUARIOS)
+
+
+# ================ SALVAR USUÁRIOS ================ #
 
 
 def salvar_usuarios(usuarios):
@@ -24,26 +29,54 @@ def salvar_usuarios(usuarios):
     return salvar_arquivo_json(ARQUIVO_USUARIOS, usuarios)
 
 
-def cadastrar_usuario():
-    log_info("\n=== CADASTRO DE USUÁRIO ===")
+# ================ CADASTRAR USUÁRIOS ================ #
 
+
+def cadastrar_usuario():
     try:
+        log_info("\n" + "=" * 60)
+        log_info("CADASTRO DE USUÁRIO")
+        log_info("=" * 60)
+
         usuarios = carregar_usuarios()
 
-        nome = entrada_segura("Nome de usuário: ")
-        if any(u.get("nome") == nome for u in usuarios):
-            log_validacao("Usuário já existe!")
-            return False
+        while True:
+            nome = entrada_segura("Nome de usuário: ").strip()
+            if not nome:
+                log_validacao("Nome de usuário é obrigatório!")
+                continue
+            if any(u.get("nome") == nome for u in usuarios):
+                log_validacao("Usuário já existe!")
+                continue
+            break
 
-        email = entrada_segura("Email: ").lower()
-        senha = entrada_segura("Senha: ")
+        while True:
+            email = entrada_segura("Email: ").lower().strip()
+            if not email:
+                log_validacao("Email é obrigatório!")
+                continue
+            break
+
+        while True:
+            senha = entrada_segura("Senha: ").strip()
+            if not senha:
+                log_validacao("Senha é obrigatória!")
+                continue
+            if len(senha) < 6:
+                log_validacao("Senha deve ter pelo menos 6 caracteres!")
+                continue
+            break
 
         papeis_validos = ["Admin", "Editor", "Leitor"]
         while True:
-            papel = entrada_segura("Papel (Admin / Editor / Leitor): ").title()
-            if papel in papeis_validos:
-                break
-            log_validacao("Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+            papel = entrada_segura("Papel (Admin / Editor / Leitor): ").title().strip()
+            if not papel:
+                log_validacao("Papel é obrigatório!")
+                continue
+            if papel not in papeis_validos:
+                log_validacao("Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+                continue
+            break
 
         novo_usuario = {
             "id": gerar_id(usuarios),
@@ -68,6 +101,9 @@ def cadastrar_usuario():
         return False
 
 
+# ================ LISTAR USUÁRIOS ================ #
+
+
 def listar_usuarios():
     usuarios = carregar_usuarios()
     if not usuarios:
@@ -89,6 +125,9 @@ def listar_usuarios():
         log_info("-" * 60)
 
 
+# ================ BUSCAR USUÁRIOS ================ #
+
+
 def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     usuarios = carregar_usuarios()
     usuario_encontrado = None
@@ -103,33 +142,53 @@ def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     return usuario_encontrado
 
 
+# ================ ATUALIZAR USUÁRIOS ================ #
+
+
 def atualizar_usuario():
     try:
         usuario_id = int(
-            entrada_segura("Digite o ID do usuário que deseja atualizar: ")
+            entrada_segura("Digite o ID do usuário que deseja atualizar: ").strip()
         )
+
         usuario = buscar_usuario_por_id(usuario_id)
         if not usuario:
             log_erro("Usuário não encontrado!")
-            return
+            return False
 
-        log_info("\nEDITANDO USUÁRIO")
+        log_info(f"\nEDITANDO USUÁRIO: {usuario['nome']}")
         log_info("Deixe em branco para manter o valor atual.")
 
-        novo_nome = entrada_segura(f"Nome ({usuario['nome']}): ")
+        novo_nome = entrada_segura(f"Nome [{usuario['nome']}]: ").strip()
         if novo_nome:
             usuario["nome"] = novo_nome
+        else:
+            log_info(f"Nome mantido como '{usuario['nome']}'.")
 
-        nova_senha = entrada_segura("Senha: ")
+        novo_email = entrada_segura(f"Email [{usuario['email']}]: ").lower().strip()
+        if novo_email:
+            usuario["email"] = novo_email
+        else:
+            log_info(f"Email mantido como '{usuario['email']}'.")
+
+        nova_senha = entrada_segura("Senha (deixe em branco para manter): ").strip()
         if nova_senha:
+            if len(nova_senha) < 6:
+                log_validacao("Senha deve ter pelo menos 6 caracteres!")
+                return False
             usuario["senha"] = nova_senha
+        else:
+            log_info("Senha mantida (campo deixado em branco).")
 
-        novo_papel = entrada_segura(f"Papel ({usuario['papel']}): ").title()
+        papeis_validos = ["Admin", "Editor", "Leitor"]
+        novo_papel = entrada_segura(f"Papel [{usuario['papel']}]: ").title().strip()
         if novo_papel:
-            if novo_papel not in ["Admin", "Editor", "Leitor"]:
-                log_validacao("Papel inválido.")
-                return
+            if novo_papel not in papeis_validos:
+                log_validacao("Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+                return False
             usuario["papel"] = novo_papel
+        else:
+            log_info(f"Papel mantido como '{usuario['papel']}'.")
 
         usuarios = carregar_usuarios()
         for i in range(len(usuarios)):
@@ -139,20 +198,27 @@ def atualizar_usuario():
 
         if salvar_usuarios(usuarios):
             log_sucesso("Usuário atualizado com sucesso!")
+            return True
         else:
             log_erro("Erro ao salvar alterações!")
+            return False
 
     except KeyboardInterrupt as e:
         log_info(f"\n{e}\nVoltando ao menu principal...")
         return False
     except ValueError:
         log_validacao("ID inválido!")
-        return
+        return False
+
+
+# ================ EXCLUIR USUÁRIOS ================ #
 
 
 def excluir_usuario():
     try:
-        usuario_id = int(entrada_segura("Digite o ID do usuário que deseja excluir: "))
+        usuario_id = int(
+            entrada_segura("Digite o ID do usuário que deseja excluir: ").strip()
+        )
 
         usuario = buscar_usuario_por_id(usuario_id)
         if not usuario:
@@ -162,7 +228,7 @@ def excluir_usuario():
         nome_usuario = usuario["nome"]
         confirmacao = (
             entrada_segura(
-                f"\n⚠️ Tem certeza que deseja excluir '{nome_usuario}'? (s/n): "
+                f"\n⚠️ Tem certeza que deseja excluir " f"'{nome_usuario}'? (s/n): "
             )
             .strip()
             .lower()
@@ -193,6 +259,9 @@ def excluir_usuario():
         return False
 
 
+# ================ MENU DE USUÁRIOS ================ #
+
+
 def menu_usuarios():
     while True:
         try:
@@ -207,7 +276,7 @@ def menu_usuarios():
             log_info("0. Sair do Sistema")
             log_info("-" * 60)
 
-            opcao = entrada_segura("Escolha uma opção: ")
+            opcao = entrada_segura("Escolha uma opção: ").strip()
 
             if opcao == "1":
                 cadastrar_usuario()

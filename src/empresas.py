@@ -26,33 +26,57 @@ def salvar_empresas(empresas):
 
 def cadastrar_empresa():
     try:
-        log_info("\n=== CADASTRO DE EMPRESA ===")
+        log_info("\n" + "=" * 60)
+        log_info("CADASTRO DE EMPRESA")
+        log_info("=" * 60)
         log_info("\nDADOS DA EMPRESA:")
 
-        nome_empresa = entrada_segura("Nome da Empresa: ").title().strip()
-
-        cnpj = entrada_segura("CNPJ (xx.xxx.xxx/xxxx-xx): ").strip()
-
         empresas = carregar_empresas()
-        for empresa in empresas:
-            if empresa["cnpj"] == cnpj:
+
+        while True:
+            nome_empresa = entrada_segura("Nome da Empresa: ").title().strip()
+            if not nome_empresa:
+                log_validacao("Nome da empresa é obrigatório!")
+                continue
+            break
+
+        while True:
+            cnpj = entrada_segura("CNPJ (xx.xxx.xxx/xxxx-xx): ").strip()
+            if not cnpj:
+                log_validacao("CNPJ é obrigatório!")
+                continue
+            if any(empresa.get("cnpj") == cnpj for empresa in empresas):
                 log_validacao("CNPJ já cadastrado!")
-                return False
+                continue
+            break
 
         contato_empresarial = entrada_segura(
             "Contato Empresarial (XX) XXXXX-XXXX: "
         ).strip()
-        email_empresarial = entrada_segura("Email Empresarial: ").lower().strip()
 
-        email_confirmacao = entrada_segura("Confirmação de Email: ").lower().strip()
-        if email_empresarial != email_confirmacao:
-            log_validacao("Emails não coincidem!")
-            return False
+        while True:
+            email_empresarial = entrada_segura("Email Empresarial: ").lower().strip()
+            if not email_empresarial:
+                log_validacao("Email empresarial é obrigatório!")
+                continue
+            break
 
-        nome_responsavel = entrada_segura("Nome do Responsável: ").title().strip()
-        if not nome_responsavel:
-            log_validacao("Nome do responsável é obrigatório!")
-            return False
+        while True:
+            email_confirmacao = entrada_segura("Confirmação de Email: ").lower().strip()
+            if not email_confirmacao:
+                log_validacao("Confirmação de email é obrigatória!")
+                continue
+            if email_empresarial != email_confirmacao:
+                log_validacao("Emails não coincidem!")
+                continue
+            break
+
+        while True:
+            nome_responsavel = entrada_segura("Nome do Responsável: ").title().strip()
+            if not nome_responsavel:
+                log_validacao("Nome do responsável é obrigatório!")
+                continue
+            break
 
         cpf_responsavel = entrada_segura(
             "CPF do Responsável (xxx.xxx.xxx-xx): "
@@ -60,10 +84,15 @@ def cadastrar_empresa():
         outro_contato = entrada_segura("Outro Contato (opcional): ").strip()
         nome_usuario = entrada_segura("Nome de Usuário: ").lower().strip()
 
-        senha = entrada_segura("Senha: ").strip()
-        if len(senha) < 6:
-            log_validacao("Senha deve ter pelo menos 6 caracteres!")
-            return False
+        while True:
+            senha = entrada_segura("Senha: ").strip()
+            if not senha:
+                log_validacao("Senha é obrigatória!")
+                continue
+            if len(senha) < 6:
+                log_validacao("Senha deve ter pelo menos 6 caracteres!")
+                continue
+            break
 
         log_info("\nENDEREÇO DA EMPRESA:")
         cep = entrada_segura("CEP (xx.xxx-xxx): ").strip()
@@ -185,7 +214,7 @@ def atualizar_empresa():
         empresa = buscar_empresa_por_id(empresa_id)
         if not empresa:
             log_erro("Empresa não encontrada!")
-            return
+            return False
 
         log_info(f"\nEDITANDO EMPRESA: {empresa['nome_empresa']}")
         log_info("Deixe em branco para manter o valor atual.")
@@ -195,18 +224,24 @@ def atualizar_empresa():
         ).strip()
         if novo_nome:
             empresa["nome_empresa"] = novo_nome
+        else:
+            log_info(f"Nome mantido como '{empresa['nome_empresa']}'.")
 
         novo_contato = entrada_segura(
             f"Contato Empresarial [{empresa['contato_empresarial']}]: "
         ).strip()
         if novo_contato:
             empresa["contato_empresarial"] = novo_contato
+        else:
+            log_info(f"Contato mantido como '{empresa['contato_empresarial']}'.")
 
         novo_email = entrada_segura(
             f"Email Empresarial [{empresa['email_empresarial']}]: "
         ).strip()
         if novo_email:
             empresa["email_empresarial"] = novo_email
+        else:
+            log_info(f"Email mantido como '{empresa['email_empresarial']}'.")
 
         novo_responsavel = (
             entrada_segura(f"Nome do Responsável [{empresa['nome_responsavel']}]: ")
@@ -215,6 +250,8 @@ def atualizar_empresa():
         )
         if novo_responsavel:
             empresa["nome_responsavel"] = novo_responsavel
+        else:
+            log_info(f"Responsável mantido como '{empresa['nome_responsavel']}'.")
 
         novo_usuario = (
             entrada_segura(f"Nome de Usuário [{empresa['nome_usuario']}]: ")
@@ -223,6 +260,8 @@ def atualizar_empresa():
         )
         if novo_usuario:
             empresa["nome_usuario"] = novo_usuario
+        else:
+            log_info(f"Usuário mantido como '{empresa['nome_usuario']}'.")
 
         log_info("\nEDITANDO ENDEREÇO")
         novo_logradouro = (
@@ -232,12 +271,18 @@ def atualizar_empresa():
         )
         if novo_logradouro:
             empresa["endereco"]["logradouro"] = novo_logradouro
+        else:
+            log_info(
+                f"Logradouro mantido como " f"'{empresa['endereco']['logradouro']}'."
+            )
 
         novo_numero = entrada_segura(
             f"Número [{empresa['endereco']['numero']}]: "
         ).strip()
         if novo_numero:
             empresa["endereco"]["numero"] = novo_numero
+        else:
+            log_info(f"Número mantido como '{empresa['endereco']['numero']}'.")
 
         novo_bairro = (
             entrada_segura(f"Bairro [{empresa['endereco']['bairro']}]: ")
@@ -246,6 +291,8 @@ def atualizar_empresa():
         )
         if novo_bairro:
             empresa["endereco"]["bairro"] = novo_bairro
+        else:
+            log_info(f"Bairro mantido como '{empresa['endereco']['bairro']}'.")
 
         nova_cidade = (
             entrada_segura(f"Cidade [{empresa['endereco']['cidade']}]: ")
@@ -254,6 +301,8 @@ def atualizar_empresa():
         )
         if nova_cidade:
             empresa["endereco"]["cidade"] = nova_cidade
+        else:
+            log_info(f"Cidade mantida como '{empresa['endereco']['cidade']}'.")
 
         novo_estado = (
             entrada_segura(f"Estado [{empresa['endereco']['estado']}]: ")
@@ -262,12 +311,16 @@ def atualizar_empresa():
         )
         if novo_estado:
             empresa["endereco"]["estado"] = novo_estado
+        else:
+            log_info(f"Estado mantido como '{empresa['endereco']['estado']}'.")
 
         nova_observacao = (
             entrada_segura(f"Observações [{empresa['observacoes']}]: ").title().strip()
         )
         if nova_observacao:
             empresa["observacoes"] = nova_observacao
+        else:
+            log_info(f"Observações mantidas como '{empresa['observacoes']}'.")
 
         empresas = carregar_empresas()
         for i in range(len(empresas)):
@@ -284,6 +337,9 @@ def atualizar_empresa():
 
     except KeyboardInterrupt as e:
         log_info(f"\n{e}\nVoltando ao menu principal...")
+        return False
+    except ValueError:
+        log_validacao("ID inválido!")
         return False
 
 
