@@ -1,7 +1,5 @@
-# Arquivo para metodos de login/recuperar senha
 import sys
 from usuarios import carregar_usuarios, salvar_usuarios, cadastrar_usuario
-
 
 def esqueci_senha():
     print("\n" + "="*60)
@@ -33,7 +31,6 @@ def esqueci_senha():
             continue
         break
 
-    # Atualiza a senha no array e salva
     for i in range(len(usuarios)):
         if usuarios[i].get('id') == usuario_encontrado.get('id'):
             usuarios[i]['senha'] = nova_senha
@@ -69,7 +66,7 @@ def login():
 
         if usuario_valido:
             print(f"\n✅ Bem-vindo(a), {usuario_valido.get('nome')}!")
-            return True
+            return usuario_valido
 
         print("❌ Credenciais inválidas ou usuário inativo.")
         print("-"*60)
@@ -84,7 +81,6 @@ def login():
             continue
         elif opcao == "2":
             esqueci_senha()
-            # Após recuperação, volta para tentar login novamente
             continue
         elif opcao == "0":
             print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
@@ -110,14 +106,15 @@ def menu_auth(exibir_opcoes_navegacao: bool = False):
         opcao = input("Escolha uma opção: ").strip()
 
         if opcao == "1":
-            if login():
-                return True
+            usuario_logado = login()
+            if usuario_logado:
+                return usuario_logado
         elif opcao == "2":
             cadastrar_usuario()
         elif opcao == "3":
             esqueci_senha()
         elif exibir_opcoes_navegacao and opcao == "6":
-            return False
+            return None
         elif exibir_opcoes_navegacao and opcao == "0":
             print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
             sys.exit(0)

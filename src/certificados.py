@@ -1,3 +1,4 @@
+from datetime import datetime
 from empresas import carregar_empresas, salvar_empresas
 from collections import Counter 
 
@@ -59,9 +60,7 @@ def registrar_novo_certificado():
 
 
 def ranking_empresas():
-    """
-    Calcula e exibe o ranking de empresas com base no número de certificados.
-    """
+    
     print("\n" + "=" * 10 + " Ranking Total de Certificados " + "=" * 10)
 
     empresas = carregar_empresas()
@@ -78,7 +77,7 @@ def ranking_empresas():
         nome_empresa = empresa.get("nome_empresa", "Empresa Desconhecida")
         
         for cert in empresa.get("certificados", []):
-             lista_nomes_empresas.append(nome_empresa)
+              lista_nomes_empresas.append(nome_empresa)
 
     if not lista_nomes_empresas:
         print("Nenhum certificado registrado no sistema.")
@@ -92,6 +91,55 @@ def ranking_empresas():
         print(f"{i:<5} | {empresa:<30} | {contagem:<20}")
 
 
+def validar_certificados_automaticamente():
+    print("\n" + "=" * 60)
+    print("🔍 VALIDAÇÃO AUTOMÁTICA DE CERTIFICADOS (Vencimento)")
+    print("=" * 60)
+
+    empresas = carregar_empresas()
+    hoje = datetime.now()
+    encontrou_algum = False
+
+    if not empresas:
+        print("Nenhuma empresa para validar.")
+        return
+
+    print(f"{'Empresa':<20} | {'Certificado':<20} | {'Validade':<12} | {'STATUS':<10}")
+    print("-" * 70)
+
+    for empresa in empresas:
+        if not empresa.get('ativo', True):
+            continue
+
+        certificados = empresa.get('certificados', [])
+        if not certificados:
+            continue
+
+        for cert in certificados:
+            encontrou_algum = True
+            data_str = cert.get('data_validade')
+            nome_cert = cert.get('nome_certificado')
+            nome_emp = empresa.get('nome_empresa')
+
+            try:
+                data_validade = datetime.strptime(data_str, "%d/%m/%Y")
+                
+                if data_validade >= hoje:
+                    status = "✅ VÁLIDO"
+                else:
+                    status = "❌ VENCIDO"
+            except ValueError:
+                status = "⚠️ DATA INVÁLIDA"
+
+            print(f"{nome_emp[:20]:<20} | {nome_cert[:20]:<20} | {data_str:<12} | {status:<10}")
+
+    if not encontrou_algum:
+        print("\nNenhum certificado encontrado para validar.")
+    else:
+        print("-" * 70)
+        print(f"Data da verificação automática: {hoje.strftime('%d/%m/%Y')}")
+
+
 def menu_certificados():
     
     while True:
@@ -100,10 +148,11 @@ def menu_certificados():
         print("=" * 60)
         print("1. Registrar Novo Certificado")
         print("2. Ver Ranking de Empresas (Total de Certificados)")
-        print("3. Voltar ao Menu Principal")
+        print("3. Validar Certificados (Automático)") 
+        print("4. Voltar ao Menu Principal")
         print("-" * 60)
 
-        escolha = input("Escolha uma opção (1-3): ").strip()
+        escolha = input("Escolha uma opção (1-4): ").strip()
 
         if escolha == "1":
             registrar_novo_certificado()
@@ -112,8 +161,11 @@ def menu_certificados():
             ranking_empresas()
             input("\nPressione Enter para continuar...")
         elif escolha == "3":
+            validar_certificados_automaticamente()
+            input("\nPressione Enter para continuar...")
+        elif escolha == "4":
             print("Retornando ao menu principal...")
-            break # Volta para o app.py
+            break
         else:
-            print("❌ Opção inválida. Por favor, escolha de 1 a 3.")
+            print("❌ Opção inválida. Por favor, escolha de 1 a 4.")
             input("\nPressione Enter para continuar...")

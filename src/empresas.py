@@ -8,8 +8,13 @@ ARQUIVO_EMPRESAS = "data/empresas.json"
 
 def carregar_empresas():
     try:
+        if not os.path.exists(ARQUIVO_EMPRESAS):
+            return []
         with open(ARQUIVO_EMPRESAS, 'r', encoding='utf-8') as arquivo:
-            return json.load(arquivo)
+            dados = arquivo.read()
+            if not dados:
+                return []
+            return json.loads(dados)
     except Exception as e:
         print(f"Erro ao carregar empresas: {e}")
         return []
@@ -17,6 +22,10 @@ def carregar_empresas():
 
 def salvar_empresas(empresas):
     try:
+        pasta = os.path.dirname(ARQUIVO_EMPRESAS)
+        if pasta:
+            os.makedirs(pasta, exist_ok=True)
+
         with open(ARQUIVO_EMPRESAS, 'w', encoding='utf-8') as arquivo:
             json.dump(empresas, arquivo, ensure_ascii=False, indent=2)
         return True
@@ -123,6 +132,9 @@ def listar_empresas():
     for empresa in empresas:
         empresa_ativa = empresa.get('ativo', True)
         status = "✅ Ativa" if empresa_ativa else "❌ Inativa"
+        
+        qtd_certificados = len(empresa.get("certificados", []))
+        
         print(f"ID: {empresa['id']}")
         print(f"Nome: {empresa['nome_empresa']}")
         print(f"CNPJ: {empresa['cnpj']}")
@@ -130,6 +142,7 @@ def listar_empresas():
         print(f"Responsável: {empresa['nome_responsavel']}")
         print(f"Data Cadastro: {empresa['data_cadastro']}")
         print(f"Status: {status}")
+        print(f"Certificados: {qtd_certificados}")
         print("-"*60)
 
 
@@ -181,11 +194,21 @@ def atualizar_empresa():
         print("❌ ID inválido!")
         return
 
-    empresa = buscar_empresa_por_id(empresa_id)
-    if not empresa:
+    empresas = carregar_empresas()
+    empresa_encontrada = None
+    indice_empresa = -1
+    
+    for i in range(len(empresas)):
+        if empresas[i].get('id') == empresa_id:
+            empresa_encontrada = empresas[i]
+            indice_empresa = i
+            break
+
+    if not empresa_encontrada:
         print("❌ Empresa não encontrada!")
         return
 
+    empresa = empresa_encontrada
     print(f"\nEDITANDO EMPRESA: {empresa['nome_empresa']}")
     print("Deixe em branco para manter o valor atual.")
 
@@ -243,11 +266,7 @@ def atualizar_empresa():
     if nova_observacao:
         empresa['observacoes'] = nova_observacao
 
-    empresas = carregar_empresas()
-    for i in range(len(empresas)):
-        if empresas[i].get('id') == empresa['id']:
-            empresas[i] = empresa
-            break
+    empresas[indice_empresa] = empresa
 
     if salvar_empresas(empresas):
         print("✅ Empresa atualizada com sucesso!")
@@ -265,32 +284,37 @@ def excluir_empresa():
         print("❌ ID inválido!")
         return False
 
-    empresa = buscar_empresa_por_id(empresa_id)
+    empresas = carregar_empresas()
+    empresa_encontrada = None
+    indice_empresa = -1
 
-    if not empresa:
+    for i in range(len(empresas)):
+        if empresas[i].get('id') == empresa_id:
+            empresa_encontrada = empresas[i]
+            indice_empresa = i
+            break
+
+    if not empresa_encontrada:
         print("❌ Empresa não encontrada!")
         return False
 
     confirmacao = input(
-        f"\n⚠️ Tem certeza que deseja excluir '{empresa['nome_empresa']}'? (s/n): ").strip().lower()
+        f"\n⚠️ Tem certeza que deseja excluir '{empresa_encontrada['nome_empresa']}'? (s/n): ").strip().lower()
 
     if confirmacao in ['s', 'sim']:
-        empresas = carregar_empresas()
-        for i in range(len(empresas)):
-            if empresas[i].get('id') == empresa_id:
-                empresas[i]['ativo'] = False
-                break
+        
+        empresas[indice_empresa]['ativo'] = False
 
         if salvar_empresas(empresas):
             print(
-                f"✅ Empresa '{empresa['nome_empresa']}' excluída com sucesso!")
+                f"✅ Empresa '{empresa_encontrada['nome_empresa']}' excluída com sucesso!")
             return True
         else:
-            print(f"❌ Erro ao excluir empresa '{empresa['nome_empresa']}'!")
+            print(f"❌ Erro ao excluir empresa '{empresa_encontrada['nome_empresa']}'!")
             return False
     else:
         print(
-            f"❌ Operação cancelada para empresa '{empresa['nome_empresa']}'.")
+            f"❌ Operação cancelada para empresa '{empresa_encontrada['nome_empresa']}'.")
         return False
 
 
