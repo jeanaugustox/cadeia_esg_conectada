@@ -1,5 +1,7 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from utils import entrada_segura, log_info
+
 
 class ChatBotIA:
     def __init__(self):
@@ -20,7 +22,7 @@ class ChatBotIA:
             "sistema dando erro",
             "como navegar no sistema",
             "me ajude",
-            "preciso de ajuda"
+            "preciso de ajuda",
         ]
 
         # Respostas alinhadas EXATAMENTE com as frases acima
@@ -40,13 +42,11 @@ class ChatBotIA:
             "Reinicie o sistema e confira as informações inseridas.",
             "Use o menu principal para acessar empresas, usuários e certificados.",
             "Claro! Como posso te ajudar exatamente?",
-            "Estou aqui para ajudar. Pode explicar melhor sua dúvida?"
+            "Estou aqui para ajudar. Pode explicar melhor sua dúvida?",
         ]
 
-        # Criação do modelo IA
         self.vectorizer = TfidfVectorizer()
         self.vetores = self.vectorizer.fit_transform(self.frases)
-
 
     def responder(self, mensagem: str) -> str:
         mensagem_vec = self.vectorizer.transform([mensagem])
@@ -55,12 +55,10 @@ class ChatBotIA:
         indice = similaridades.argmax()
         grau = similaridades[indice]
 
-        # limiar para garantir que não responde lixo
         if grau < 0.20:
             return "Não entendi muito bem. Pode reformular sua pergunta?"
 
         return self.respostas[indice]
-
 
     def ajuda(self):
         return (
@@ -80,23 +78,27 @@ class ChatBotIA:
 def iniciar_chat():
     bot = ChatBotIA()
 
-    print("\n🤖 ChatBot IA - Cadeia ESG Conectada")
-    print(bot.ajuda())
-    print("-" * 60)
+    log_info("\n🤖 ChatBot IA - Cadeia ESG Conectada")
+    log_info(bot.ajuda())
+    log_info("-" * 60)
 
     while True:
-        msg = input("Você: ").strip().lower()
+        try:
+            msg = entrada_segura("Você: ").lower()
 
-        if msg == "sair":
-            print("ChatBot: Até logo! 👋")
-            break
-        elif msg == "voltar":
-            print("ChatBot: Voltando ao menu principal...")
+            if msg == "sair":
+                log_info("ChatBot: Até logo! 👋")
+                break
+            elif msg == "voltar":
+                log_info("ChatBot: Voltando ao menu principal...")
+                return
+            elif msg == "ajuda":
+                log_info("ChatBot: " + bot.ajuda())
+            else:
+                log_info("ChatBot: " + bot.responder(msg))
+        except KeyboardInterrupt:
+            log_info("\nChatBot: Voltando ao menu principal...")
             return
-        elif msg == "ajuda":
-            print("ChatBot:", bot.ajuda())
-        else:
-            print("ChatBot:", bot.responder(msg))
 
 
 if __name__ == "__main__":

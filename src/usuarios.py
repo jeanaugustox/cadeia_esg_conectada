@@ -1,120 +1,92 @@
-import json
-import os
 import sys
-from datetime import datetime
+from utils import (
+    entrada_segura,
+    carregar_arquivo_json,
+    salvar_arquivo_json,
+    log_sucesso,
+    log_erro,
+    log_info,
+    log_validacao,
+    gerar_id,
+    formatar_data,
+)
 
 ARQUIVO_USUARIOS = "data/usuarios.json"
 
 
-# ===========================
-# 🔹 Funções utilitárias
-# ===========================
-
-class OperacaoCancelada(Exception):
-    """Exceção personalizada para cancelamento de operação."""
-    pass
-
-
-def input_cancelavel(mensagem: str) -> str:
-    """Input que permite o usuário digitar 'cancelar' ou 'sair' para interromper a operação."""
-    valor = input(mensagem).strip()
-    if valor.lower() in ["cancelar", "sair"]:
-        raise OperacaoCancelada
-    return valor
-
-
-# ===========================
-# 🔹 Funções de arquivo
-# ===========================
-
 def carregar_usuarios():
-    try:
-        if not os.path.exists(ARQUIVO_USUARIOS):
-            return []
-        with open(ARQUIVO_USUARIOS, "r", encoding="utf-8") as arquivo:
-            return json.load(arquivo)
-    except Exception as e:
-        print(f"Erro ao carregar usuários: {e}")
-        return []
+    """Carrega usuários do arquivo JSON."""
+    return carregar_arquivo_json(ARQUIVO_USUARIOS)
 
 
 def salvar_usuarios(usuarios):
-    try:
-        with open(ARQUIVO_USUARIOS, "w", encoding="utf-8") as arquivo:
-            json.dump(usuarios, arquivo, indent=2, ensure_ascii=False)
-        return True
-    except Exception as e:
-        print(f"Erro ao salvar usuários: {e}")
-        return False
+    """Salva usuários no arquivo JSON."""
+    return salvar_arquivo_json(ARQUIVO_USUARIOS, usuarios)
 
-
-# ===========================
-# 🔹 Funções principais
-# ===========================
 
 def cadastrar_usuario():
-    print("\n=== CADASTRO DE USUÁRIO ===")
+    log_info("\n=== CADASTRO DE USUÁRIO ===")
 
     try:
         usuarios = carregar_usuarios()
 
-        nome = input_cancelavel("Nome de usuário: ")
+        nome = entrada_segura("Nome de usuário: ")
         if any(u.get("nome") == nome for u in usuarios):
-            print("❌ Usuário já existe!")
+            log_validacao("Usuário já existe!")
             return False
 
-        email = input_cancelavel("Email: ").lower()
-        senha = input_cancelavel("Senha: ")
+        email = entrada_segura("Email: ").lower()
+        senha = entrada_segura("Senha: ")
 
         papeis_validos = ["Admin", "Editor", "Leitor"]
         while True:
-            papel = input_cancelavel("Papel (Admin / Editor / Leitor): ").title()
+            papel = entrada_segura("Papel (Admin / Editor / Leitor): ").title()
             if papel in papeis_validos:
                 break
-            print("❌ Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+            log_validacao("Papel inválido. Opções válidas: Admin, Editor, Leitor.")
 
         novo_usuario = {
-            "id": len(usuarios) + 1,
+            "id": gerar_id(usuarios),
             "nome": nome,
             "email": email,
             "senha": senha,
             "papel": papel,
-            "data_cadastro": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            "data_cadastro": formatar_data(),
             "ativo": True,
         }
 
         usuarios.append(novo_usuario)
         if salvar_usuarios(usuarios):
-            print(f"\n✅ Usuário '{nome}' cadastrado com sucesso!")
+            log_sucesso(f"Usuário '{nome}' cadastrado com sucesso!")
             return True
         else:
-            print("❌ Erro ao salvar usuário!")
+            log_erro("Erro ao salvar usuário!")
             return False
 
-    except OperacaoCancelada:
-        print("\n❌ Operação cancelada pelo usuário.")
+    except KeyboardInterrupt as e:
+        log_info(f"\n{e}\nVoltando ao menu principal...")
         return False
 
 
 def listar_usuarios():
     usuarios = carregar_usuarios()
     if not usuarios:
-        print("\n❌ Nenhum usuário cadastrado.")
+        log_erro("Nenhum usuário cadastrado.")
         return
 
-    print(f"\nUSUÁRIOS CADASTRADOS ({len(usuarios)} usuários)")
-    print("-"*60)
+    log_info(f"\nUSUÁRIOS CADASTRADOS ({len(usuarios)} usuários)")
+    log_info("-" * 60)
 
     for u in usuarios:
-        usuario_ativo = u.get('ativo', True)
+        usuario_ativo = u.get("ativo", True)
         status = "✅ Ativo" if usuario_ativo else "❌ Inativo"
-        print(f"ID: {u['id']}")
-        print(f"Nome: {u['nome']}")
-        print(f"Papel: {u['papel']}")
-        if 'data_cadastro' in u:
-            print(f"Data Cadastro: {u['data_cadastro']}")
-        print(f"Status: {status}")
-        print("-"*60)
+        log_info(f"ID: {u['id']}")
+        log_info(f"Nome: {u['nome']}")
+        log_info(f"Papel: {u['papel']}")
+        if "data_cadastro" in u:
+            log_info(f"Data Cadastro: {u['data_cadastro']}")
+        log_info(f"Status: {status}")
+        log_info("-" * 60)
 
 
 def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
@@ -122,8 +94,8 @@ def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     usuario_encontrado = None
 
     for usuario in usuarios:
-        id_confere = usuario.get('id') == usuario_id
-        ativo_ok = incluir_inativos or usuario.get('ativo', True)
+        id_confere = usuario.get("id") == usuario_id
+        ativo_ok = incluir_inativos or usuario.get("ativo", True)
         if id_confere and ativo_ok:
             usuario_encontrado = usuario
             break
@@ -133,119 +105,126 @@ def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
 
 def atualizar_usuario():
     try:
-        usuario_id = int(input_cancelavel("Digite o ID do usuário que deseja atualizar: "))
+        usuario_id = int(
+            entrada_segura("Digite o ID do usuário que deseja atualizar: ")
+        )
         usuario = buscar_usuario_por_id(usuario_id)
         if not usuario:
-            print("❌ Usuário não encontrado!")
+            log_erro("Usuário não encontrado!")
             return
 
-        print("\nEDITANDO USUÁRIO")
-        print("Deixe em branco para manter o valor atual.")
+        log_info("\nEDITANDO USUÁRIO")
+        log_info("Deixe em branco para manter o valor atual.")
 
-        novo_nome = input_cancelavel(f"Nome ({usuario['nome']}): ")
+        novo_nome = entrada_segura(f"Nome ({usuario['nome']}): ")
         if novo_nome:
-            usuario['nome'] = novo_nome
+            usuario["nome"] = novo_nome
 
-        nova_senha = input_cancelavel("Senha: ")
+        nova_senha = entrada_segura("Senha: ")
         if nova_senha:
-            usuario['senha'] = nova_senha
+            usuario["senha"] = nova_senha
 
-        novo_papel = input_cancelavel(f"Papel ({usuario['papel']}): ").title()
+        novo_papel = entrada_segura(f"Papel ({usuario['papel']}): ").title()
         if novo_papel:
             if novo_papel not in ["Admin", "Editor", "Leitor"]:
-                print("❌ Papel inválido.")
+                log_validacao("Papel inválido.")
                 return
-            usuario['papel'] = novo_papel
+            usuario["papel"] = novo_papel
 
         usuarios = carregar_usuarios()
         for i in range(len(usuarios)):
-            if usuarios[i].get('id') == usuario['id']:
+            if usuarios[i].get("id") == usuario["id"]:
                 usuarios[i] = usuario
                 break
 
         if salvar_usuarios(usuarios):
-            print("✅ Usuário atualizado com sucesso!")
+            log_sucesso("Usuário atualizado com sucesso!")
         else:
-            print("❌ Erro ao salvar alterações!")
+            log_erro("Erro ao salvar alterações!")
 
-    except OperacaoCancelada:
-        print("\n❌ Operação cancelada pelo usuário.")
-        return
+    except KeyboardInterrupt as e:
+        log_info(f"\n{e}\nVoltando ao menu principal...")
+        return False
     except ValueError:
-        print("❌ ID inválido!")
+        log_validacao("ID inválido!")
         return
 
 
 def excluir_usuario():
     try:
-        usuario_id = int(input_cancelavel("Digite o ID do usuário que deseja excluir: "))
-    except ValueError:
-        print("❌ ID inválido!")
-        return False
-    except OperacaoCancelada:
-        print("\n❌ Operação cancelada pelo usuário.")
-        return False
+        usuario_id = int(entrada_segura("Digite o ID do usuário que deseja excluir: "))
 
-    usuario = buscar_usuario_por_id(usuario_id)
-    if not usuario:
-        print("❌ Usuário não encontrado!")
-        return False
+        usuario = buscar_usuario_por_id(usuario_id)
+        if not usuario:
+            log_erro("Usuário não encontrado!")
+            return False
 
-    try:
-        confirmacao = input_cancelavel(
-            f"\n⚠️ Tem certeza que deseja excluir '{usuario['nome']}'? (s/n): "
-        ).lower()
+        nome_usuario = usuario["nome"]
+        confirmacao = (
+            entrada_segura(
+                f"\n⚠️ Tem certeza que deseja excluir '{nome_usuario}'? (s/n): "
+            )
+            .strip()
+            .lower()
+        )
 
-        if confirmacao in ['s', 'sim']:
+        if confirmacao in ["s", "sim"]:
             usuarios = carregar_usuarios()
             for i in range(len(usuarios)):
-                if usuarios[i].get('id') == usuario_id:
-                    usuarios[i]['ativo'] = False
+                if usuarios[i].get("id") == usuario_id:
+                    usuarios[i]["ativo"] = False
                     break
 
             if salvar_usuarios(usuarios):
-                print(f"✅ Usuário '{usuario['nome']}' excluído com sucesso!")
+                log_sucesso(f"Usuário '{nome_usuario}' excluído com sucesso!")
                 return True
             else:
-                print(f"❌ Erro ao excluir usuário '{usuario['nome']}'!")
+                log_erro(f"Erro ao excluir usuário '{nome_usuario}'!")
                 return False
         else:
-            print(f"❌ Operação cancelada para usuário '{usuario['nome']}'.")
+            log_validacao(f"Operação cancelada para usuário '{nome_usuario}'.")
             return False
 
-    except OperacaoCancelada:
-        print("\n❌ Operação cancelada pelo usuário.")
+    except KeyboardInterrupt as e:
+        log_info(f"\n{e}\nVoltando ao menu principal...")
+        return False
+    except ValueError:
+        log_validacao("ID inválido!")
         return False
 
 
 def menu_usuarios():
     while True:
-        print("\n" + "="*60)
-        print("MÓDULO DE USUÁRIOS")
-        print("="*60)
-        print("1. Cadastrar Usuário")
-        print("2. Listar Usuários")
-        print("3. Atualizar Usuário")
-        print("4. Excluir Usuário")
-        print("5. Voltar ao Menu Principal")
-        print("0. Sair do Sistema")
-        print("-"*60)
+        try:
+            log_info("\n" + "=" * 60)
+            log_info("MÓDULO DE USUÁRIOS")
+            log_info("=" * 60)
+            log_info("1. Cadastrar Usuário")
+            log_info("2. Listar Usuários")
+            log_info("3. Atualizar Usuário")
+            log_info("4. Excluir Usuário")
+            log_info("5. Voltar ao Menu Principal")
+            log_info("0. Sair do Sistema")
+            log_info("-" * 60)
 
-        opcao = input("Escolha uma opção: ").strip()
+            opcao = entrada_segura("Escolha uma opção: ")
 
-        if opcao == "1":
-            cadastrar_usuario()
-        elif opcao == "2":
-            listar_usuarios()
-        elif opcao == "3":
-            atualizar_usuario()
-        elif opcao == "4":
-            excluir_usuario()
-        elif opcao == "5":
-            return
-        elif opcao == "0":
-            print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
-            sys.exit(0)
-        else:
-            print("❌ Opção inválida! Tente novamente.")
-            input("\nPressione Enter para continuar...")
+            if opcao == "1":
+                cadastrar_usuario()
+            elif opcao == "2":
+                listar_usuarios()
+            elif opcao == "3":
+                atualizar_usuario()
+            elif opcao == "4":
+                excluir_usuario()
+            elif opcao == "5":
+                return
+            elif opcao == "0":
+                log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+                sys.exit(0)
+            else:
+                log_validacao("Opção inválida! Tente novamente.")
+                input("\nPressione Enter para continuar...")
+
+        except KeyboardInterrupt:
+            log_info("\nOperação cancelada. Voltando ao menu principal...")
