@@ -1,39 +1,46 @@
 from empresas import menu_empresas
-from usuarios import menu_usuarios 
-from auth import login, menu_auth 
-from certificados import menu_certificados
+from usuarios import menu_usuarios
+from auth import menu_auth
+from chatbot import iniciar_chat
+from utils import entrada_segura, log_info, log_validacao
+
 
 def menu_principal():
     while True:
-        print("\n" + "=" * 60)
-        print("🌐 CADEIA ESG CONECTADA")
-        print("=" * 60)
-        print("1. Gerenciar Empresas")
-        print("2. Gerenciar Usuários")
-        print("3. Gerenciar Certificados")
-        print("4. Autenticação")
-        print("0. Sair do Sistema")
-        print("-" * 60)
+        try:
+            log_info("\n" + "=" * 60)
+            log_info("CADEIA ESG CONECTADA")
+            log_info("=" * 60)
+            log_info("1. Gerenciar Empresas")
+            log_info("2. Gerenciar Usuários")
+            log_info("3. Gerenciar Certificados")
+            log_info("4. Autenticação")
+            log_info("5. ChatBot de Ajuda")
+            log_info("0. Sair do Sistema")
+            log_info("-" * 60)
 
-        opcao = input("Escolha uma opção: ").strip()
+            opcao = entrada_segura("Escolha uma opção: ")
 
-        if opcao == "1":
-            menu_empresas()
-            input("\nPressione Enter para voltar ao menu principal...")
-        elif opcao == "2":
-            menu_usuarios() 
-            input("\nPressione Enter para voltar ao menu principal...")
-        elif opcao == "3":
-            menu_certificados() 
-        elif opcao == "4":
-            menu_auth(exibir_opcoes_navegacao=True)
-            input("\nPressione Enter para voltar ao menu principal...")
-        elif opcao == "0":
-            print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
-            break
-        else:
-            print("❌ Opção inválida! Tente novamente.")
-            input("\nPressione Enter para continuar...")
+            if opcao == "1":
+                menu_empresas()
+            elif opcao == "2":
+                menu_usuarios()
+            elif opcao == "3":
+                log_info("Módulo de Certificados")
+                input("Pressione Enter para continuar...")
+            elif opcao == "4":
+                menu_auth(exibir_opcoes_navegacao=True)
+            elif opcao == "5":
+                iniciar_chat()
+            elif opcao == "0":
+                log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+                break
+            else:
+                log_validacao("Opção inválida! Tente novamente.")
+                input("Pressione Enter para continuar...")
+        except KeyboardInterrupt:
+            log_info("\nOperação cancelada. Voltando ao menu principal...")
+
 
 if __name__ == "__main__":
     menu_auth()
