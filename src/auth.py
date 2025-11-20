@@ -1,123 +1,153 @@
 import sys
-from usuarios import carregar_usuarios, salvar_usuarios, cadastrar_usuario
+from usuarios import (
+    carregar_usuarios,
+    salvar_usuarios,
+    cadastrar_usuario_publico,
+)
+from utils import (
+    entrada_segura,
+    log_sucesso,
+    log_erro,
+    log_info,
+    log_validacao,
+    validar_senha,
+)
+
 
 def esqueci_senha():
-    print("\n" + "="*60)
-    print("RECUPERAÇÃO DE SENHA")
-    print("="*60)
+    try:
+        log_info("\n" + "=" * 60)
+        log_info("RECUPERAÇÃO DE SENHA")
+        log_info("=" * 60)
 
-    nome = input("Nome de usuário: ").strip()
-    email = input("Email cadastrado: ").lower().strip()
+        nome = entrada_segura("Nome de usuário: ")
+        email = entrada_segura("Email cadastrado: ").lower()
 
-    usuarios = carregar_usuarios()
-    usuario_encontrado = None
+        usuarios = carregar_usuarios()
+        usuario_encontrado = None
 
-    for usuario in usuarios:
-        nome_ok = usuario.get('nome') == nome
-        email_ok = usuario.get('email', '').lower() == email
+        for usuario in usuarios:
+            nome_ok = usuario.get("nome") == nome
+            email_ok = usuario.get("email", "").lower() == email
 
-        if nome_ok and email_ok:
-            usuario_encontrado = usuario
+            if nome_ok and email_ok:
+                usuario_encontrado = usuario
+                break
+
+        if not usuario_encontrado:
+            log_erro("Usuário ou email inválidos.")
+            return False
+
+        while True:
+            nova_senha = entrada_segura("Nova senha (mín. 6 caracteres): ")
+            valida, mensagem = validar_senha(nova_senha)
+            if not valida:
+                log_validacao(mensagem)
+                continue
             break
-
-    if not usuario_encontrado:
-        print("❌ Usuário ou email inválidos.")
+    except KeyboardInterrupt as e:
+        log_info(f"\n{e}\nVoltando ao menu principal...")
         return False
 
-    while True:
-        nova_senha = input("Nova senha (mín. 6 caracteres): ").strip()
-        if len(nova_senha) < 6:
-            print("❌ Senha muito curta. Tente novamente.")
-            continue
-        break
-
+    # Atualiza a senha no array e salva
     for i in range(len(usuarios)):
-        if usuarios[i].get('id') == usuario_encontrado.get('id'):
-            usuarios[i]['senha'] = nova_senha
+        if usuarios[i].get("id") == usuario_encontrado.get("id"):
+            usuarios[i]["senha"] = nova_senha
             break
 
     if salvar_usuarios(usuarios):
-        print("✅ Senha atualizada com sucesso! Faça login com a nova senha.")
+        log_sucesso("Senha atualizada com sucesso! Faça login com a nova senha.")
         return True
     else:
-        print("❌ Erro ao atualizar senha!")
+        log_erro("Erro ao atualizar senha!")
         return False
 
 
 def login():
+    log_info("\n" + "=" * 60)
+    log_info("TELA DE LOGIN")
+    log_info("=" * 60)
+
     while True:
-        print("\n" + "="*60)
-        print("TELA DE LOGIN")
-        print("="*60)
+        try:
+            nome = entrada_segura("Nome de usuário: ")
+            senha = entrada_segura("Senha: ")
 
-        nome = input("Nome de usuário: ").strip()
-        senha = input("Senha: ").strip()
+            usuarios = carregar_usuarios()
+            usuario_valido = None
 
-        usuarios = carregar_usuarios()
-        usuario_valido = None
+            for usuario in usuarios:
+                nome_ok = usuario.get("nome") == nome
+                senha_ok = usuario.get("senha") == senha
+                ativo_ok = usuario.get("ativo", True)
 
-        for usuario in usuarios:
-            if (
-                usuario.get('nome') == nome
-                and usuario.get('senha') == senha
-            ):
-                usuario_valido = usuario
-                break
+                if nome_ok and senha_ok and ativo_ok:
+                    usuario_valido = usuario
+                    break
 
-        if usuario_valido:
-            print(f"\n✅ Bem-vindo(a), {usuario_valido.get('nome')}!")
-            return usuario_valido
+            if usuario_valido:
+                log_sucesso(f"Bem-vindo(a), {usuario_valido.get('nome')}!")
+                return usuario_valido
 
-        print("❌ Credenciais inválidas ou usuário inativo.")
-        print("-"*60)
-        print("1. Tentar novamente")
-        print("2. Esqueci a senha")
-        print("0. Sair do Sistema")
-        print("-"*60)
+            log_erro("Credenciais inválidas ou usuário inativo.")
+            log_info("-" * 60)
+            log_info("1. Tentar novamente")
+            log_info("2. Esqueci a senha")
+            log_info("0. Sair do Sistema")
+            log_info("-" * 60)
 
-        opcao = input("Escolha uma opção: ").strip()
+            opcao = entrada_segura("Escolha uma opção: ")
 
-        if opcao == "1":
-            continue
-        elif opcao == "2":
-            esqueci_senha()
-            continue
-        elif opcao == "0":
-            print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
-            sys.exit(0)
-        else:
-            print("❌ Opção inválida! Tente novamente.")
-            input("\nPressione Enter para continuar...")
+            if opcao == "1":
+                continue
+            elif opcao == "2":
+                esqueci_senha()
+                continue
+            elif opcao == "0":
+                log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+                sys.exit(0)
+            else:
+                log_validacao("Opção inválida! Tente novamente.")
+                input("\nPressione Enter para continuar...")
+        except KeyboardInterrupt as e:
+            log_info(f"\n{e}\nVoltando ao menu principal...")
+            return None
 
 
 def menu_auth(exibir_opcoes_navegacao: bool = False):
     while True:
-        print("\n" + "="*60)
-        print("MÓDULO DE AUTENTICAÇÃO")
-        print("="*60)
-        print("1. Fazer Login")
-        print("2. Cadastrar Usuário")
-        print("3. Esqueci a Senha")
-        if exibir_opcoes_navegacao:
-            print("6. Voltar ao Menu Principal")
-            print("0. Sair do Sistema")
-        print("-"*60)
+        try:
+            log_info("\n" + "=" * 60)
+            log_info("MÓDULO DE AUTENTICAÇÃO")
+            log_info("=" * 60)
+            log_info("1. Fazer Login")
+            log_info("2. Cadastrar Usuário")
+            log_info("3. Esqueci a Senha")
+            if exibir_opcoes_navegacao:
+                log_info("4. Voltar ao Menu Principal")
+                log_info("0. Sair do Sistema")
+            else:
+                log_info("0. Sair do Sistema")
+            log_info("-" * 60)
 
-        opcao = input("Escolha uma opção: ").strip()
+            opcao = entrada_segura("Escolha uma opção: ")
 
-        if opcao == "1":
-            usuario_logado = login()
-            if usuario_logado:
-                return usuario_logado
-        elif opcao == "2":
-            cadastrar_usuario()
-        elif opcao == "3":
-            esqueci_senha()
-        elif exibir_opcoes_navegacao and opcao == "6":
+            if opcao == "1":
+                usuario_logado = login()
+                if usuario_logado:
+                    return usuario_logado
+            elif opcao == "2":
+                cadastrar_usuario_publico()
+            elif opcao == "3":
+                esqueci_senha()
+            elif exibir_opcoes_navegacao and opcao == "4":
+                return None
+            elif opcao == "0":
+                log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+                sys.exit(0)
+            else:
+                log_validacao("Opção inválida! Tente novamente.")
+                input("\nPressione Enter para continuar...")
+        except KeyboardInterrupt:
+            log_info("\nOperação cancelada. Voltando ao menu principal...")
             return None
-        elif exibir_opcoes_navegacao and opcao == "0":
-            print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
-            sys.exit(0)
-        else:
-            print("❌ Opção inválida! Tente novamente.")
-            input("\nPressione Enter para continuar...")

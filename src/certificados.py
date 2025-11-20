@@ -1,171 +1,252 @@
-from datetime import datetime
-from empresas import carregar_empresas, salvar_empresas
-from collections import Counter 
+import sys
+from empresas import carregar_empresas, salvar_empresas, buscar_empresa_por_id
+from collections import Counter
+from utils import (
+    entrada_segura,
+    log_sucesso,
+    log_erro,
+    log_info,
+    log_validacao,
+    validar_formato_data,
+)
+
 
 def registrar_novo_certificado():
-    
-    print("\n--- Registrar Novo Certificado ---")
-    
+    """
+    Registra um novo certificado para uma empresa.
+    """
     try:
-        empresa_id = int(
-            input("Digite o ID da empresa que receberá o certificado: ").strip())
-    except ValueError:
-        print("❌ ID inválido!")
-        return
+        log_info("\n" + "=" * 60)
+        log_info("REGISTRAR NOVO CERTIFICADO")
+        log_info("=" * 60)
 
-    empresas = carregar_empresas()
-    empresa_encontrada = None
-    indice_empresa = -1 
+        empresas = carregar_empresas()
 
-    for i in range(len(empresas)):
-        if empresas[i].get('id') == empresa_id:
-            empresa_encontrada = empresas[i]
-            indice_empresa = i
+        while True:
+            try:
+                empresa_id = int(
+                    entrada_segura(
+                        "Digite o ID da empresa que receberá o certificado: "
+                    ).strip()
+                )
+            except ValueError:
+                log_validacao("ID inválido!")
+                continue
+
+            empresa_encontrada = buscar_empresa_por_id(empresa_id)
+            if not empresa_encontrada:
+                log_validacao("Empresa não encontrada com este ID.")
+                continue
+
+            if not empresa_encontrada.get("ativo", True):
+                log_validacao(
+                    f"Empresa '{empresa_encontrada.get('nome_empresa')}' "
+                    f"está inativa e não pode receber certificados."
+                )
+                continue
+
+            indice_empresa = -1
+            for i in range(len(empresas)):
+                if empresas[i].get("id") == empresa_id:
+                    indice_empresa = i
+                    break
             break
 
-    if not empresa_encontrada:
-        print("❌ Empresa não encontrada com este ID.")
-        return
+        log_info(
+            f"Adicionando certificado para a empresa: "
+            f"{empresa_encontrada.get('nome_empresa')}"
+        )
 
-    if not empresa_encontrada.get('ativo', True):
-        print(f"❌ Empresa '{empresa_encontrada.get('nome_empresa')}' está inativa e não pode receber certificados.")
-        return
+        while True:
+            certificado = (
+                entrada_segura("Digite o nome do seu certificado ESG: ").strip().title()
+            )
+            if not certificado:
+                log_validacao("Nome do certificado é obrigatório!")
+                continue
+            break
 
-    print(f"Adicionando certificado para a empresa: {empresa_encontrada.get('nome_empresa')}")
-    
-    certificado = input("Digite o nome do seu certificado ESG: ").strip().title()
-    categoria = input("Digite a categoria do seu certificado: ").strip().title()
-    emitido = input("Digite onde foi emitido (Fonte oficial): ").strip()
-    validade = input("Digite a data de validade (ex: DD/MM/AAAA): ").strip()
-    emissao = input("Digite a data de emissão (ex: DD/MM/AAAA): ").strip()
+        while True:
+            categoria = (
+                entrada_segura("Digite a categoria do seu certificado: ")
+                .strip()
+                .title()
+            )
+            if not categoria:
+                log_validacao("Categoria é obrigatória!")
+                continue
+            break
 
-    if "certificados" not in empresa_encontrada:
-        empresa_encontrada["certificados"] = []
+        while True:
+            emitido = entrada_segura(
+                "Digite onde foi emitido (Fonte oficial): "
+            ).strip()
+            if not emitido:
+                log_validacao("Fonte de emissão é obrigatória!")
+                continue
+            break
 
-    novo_registro = {
-        "certificado_id": len(empresa_encontrada.get("certificados", [])) + 1,
-        "nome_certificado": certificado,
-        "categoria": categoria,
-        "emitido_por": emitido,
-        "data_validade": validade,
-        "data_emissao": emissao,
-    }
+        while True:
+            validade = entrada_segura(
+                "Digite a data de validade (ex: DD/MM/AAAA): "
+            ).strip()
+            if not validade:
+                log_validacao("Data de validade é obrigatória!")
+                continue
+            if not validar_formato_data(validade):
+                log_validacao(
+                    "Formato de data inválido! Use DD/MM/AAAA (ex: 31/12/2024)"
+                )
+                continue
+            break
 
-    empresas[indice_empresa]["certificados"].append(novo_registro)
+        while True:
+            emissao = entrada_segura(
+                "Digite a data de emissão (ex: DD/MM/AAAA): "
+            ).strip()
+            if not emissao:
+                log_validacao("Data de emissão é obrigatória!")
+                continue
+            if not validar_formato_data(emissao):
+                log_validacao(
+                    "Formato de data inválido! Use DD/MM/AAAA (ex: 31/12/2024)"
+                )
+                continue
+            break
 
-    if salvar_empresas(empresas):
-        print("✅ Certificado registrado e salvo com sucesso!")
-    else:
-        print("❌ Erro ao salvar o certificado.")
+        if "certificados" not in empresa_encontrada:
+            empresa_encontrada["certificados"] = []
+
+        certificados_existentes = empresa_encontrada.get("certificados", [])
+        novo_registro = {
+            "certificado_id": len(certificados_existentes) + 1,
+            "nome_certificado": certificado,
+            "categoria": categoria,
+            "emitido_por": emitido,
+            "data_validade": validade,
+            "data_emissao": emissao,
+        }
+
+        empresas[indice_empresa]["certificados"].append(novo_registro)
+
+        if salvar_empresas(empresas):
+            log_sucesso("Certificado registrado e salvo com sucesso!")
+            return True
+        else:
+            log_erro("Erro ao salvar o certificado.")
+            return False
+
+    except KeyboardInterrupt as e:
+        log_info(f"\n{e}\nVoltando ao menu principal...")
+        return False
 
 
 def ranking_empresas():
-    
-    print("\n" + "=" * 10 + " Ranking Total de Certificados " + "=" * 10)
+    """
+    Calcula e exibe o ranking de empresas com base no número de certificados.
+    """
+    log_info("\n" + "=" * 60)
+    log_info("RANKING TOTAL DE CERTIFICADOS")
+    log_info("=" * 60)
 
     empresas = carregar_empresas()
 
     if not empresas:
-        print("Nenhuma empresa registrada para o ranking.")
+        log_erro("Nenhuma empresa registrada para o ranking.")
+        return
+
+    empresas = [e for e in empresas if e.get("ativo", True)]
+
+    if not empresas:
+        log_erro("Nenhuma empresa encontrada.")
         return
 
     lista_nomes_empresas = []
     for empresa in empresas:
-        if not empresa.get('ativo', True):
-            continue
-            
         nome_empresa = empresa.get("nome_empresa", "Empresa Desconhecida")
-        
         for cert in empresa.get("certificados", []):
-              lista_nomes_empresas.append(nome_empresa)
+            lista_nomes_empresas.append(nome_empresa)
 
     if not lista_nomes_empresas:
-        print("Nenhum certificado registrado no sistema.")
+        log_erro("Nenhum certificado registrado no sistema.")
         return
 
     ranking = Counter(lista_nomes_empresas)
-    
-    print(f"{'Pos.':<5} | {'Empresa':<30} | {'Qtd. Certificados':<20}")
-    print("-" * 57)
+
+    log_info(f"{'Pos.':<5} | {'Empresa':<30} | {'Qtd. Certificados':<20}")
+    log_info("-" * 60)
     for i, (empresa, contagem) in enumerate(ranking.most_common(), 1):
-        print(f"{i:<5} | {empresa:<30} | {contagem:<20}")
+        log_info(f"{i:<5} | {empresa:<30} | {contagem:<20}")
 
 
-def validar_certificados_automaticamente():
-    print("\n" + "=" * 60)
-    print("🔍 VALIDAÇÃO AUTOMÁTICA DE CERTIFICADOS (Vencimento)")
-    print("=" * 60)
-
+def listar_certificados_publicos():
+    """
+    Lista certificados públicos de todas as empresas.
+    Mostra apenas nome da empresa, nome do certificado, categoria e validade.
+    """
     empresas = carregar_empresas()
-    hoje = datetime.now()
-    encontrou_algum = False
+    empresas_ativas = [e for e in empresas if e.get("ativo", True)]
 
-    if not empresas:
-        print("Nenhuma empresa para validar.")
+    if not empresas_ativas:
+        log_erro("Nenhuma empresa cadastrada.")
         return
 
-    print(f"{'Empresa':<20} | {'Certificado':<20} | {'Validade':<12} | {'STATUS':<10}")
-    print("-" * 70)
+    log_info("\n" + "=" * 60)
+    log_info("CERTIFICADOS PÚBLICOS")
+    log_info("=" * 60)
 
-    for empresa in empresas:
-        if not empresa.get('ativo', True):
-            continue
-
-        certificados = empresa.get('certificados', [])
-        if not certificados:
-            continue
-
-        for cert in certificados:
+    encontrou_algum = False
+    for empresa in empresas_ativas:
+        certificados = empresa.get("certificados", [])
+        if certificados:
             encontrou_algum = True
-            data_str = cert.get('data_validade')
-            nome_cert = cert.get('nome_certificado')
-            nome_emp = empresa.get('nome_empresa')
-
-            try:
-                data_validade = datetime.strptime(data_str, "%d/%m/%Y")
-                
-                if data_validade >= hoje:
-                    status = "✅ VÁLIDO"
-                else:
-                    status = "❌ VENCIDO"
-            except ValueError:
-                status = "⚠️ DATA INVÁLIDA"
-
-            print(f"{nome_emp[:20]:<20} | {nome_cert[:20]:<20} | {data_str:<12} | {status:<10}")
+            log_info(f"\nEmpresa: {empresa['nome_empresa']}")
+            for cert in certificados:
+                log_info(
+                    f"  - {cert.get('nome_certificado', 'N/A')} "
+                    f"({cert.get('categoria', 'N/A')}) - "
+                    f"Validade: {cert.get('data_validade', 'N/A')}"
+                )
+            log_info("-" * 60)
 
     if not encontrou_algum:
-        print("\nNenhum certificado encontrado para validar.")
-    else:
-        print("-" * 70)
-        print(f"Data da verificação automática: {hoje.strftime('%d/%m/%Y')}")
+        log_erro("Nenhum certificado encontrado.")
 
 
 def menu_certificados():
-    
+    """
+    Menu principal do módulo de certificados.
+    """
     while True:
-        print("\n" + "=" * 60)
-        print("📋 Módulo de Certificados")
-        print("=" * 60)
-        print("1. Registrar Novo Certificado")
-        print("2. Ver Ranking de Empresas (Total de Certificados)")
-        print("3. Validar Certificados (Automático)") 
-        print("4. Voltar ao Menu Principal")
-        print("-" * 60)
+        try:
+            log_info("\n" + "=" * 60)
+            log_info("MÓDULO DE CERTIFICADOS")
+            log_info("=" * 60)
+            log_info("1. Registrar Novo Certificado")
+            log_info("2. Ver Ranking de Empresas (Total de Certificados)")
+            log_info("3. Validar Certificados (Vencimento)")
+            log_info("4. Ver Certificados Públicos")
+            log_info("5. Voltar ao Menu Principal")
+            log_info("0. Sair do Sistema")
+            log_info("-" * 60)
 
-        escolha = input("Escolha uma opção (1-4): ").strip()
+            opcao = entrada_segura("Escolha uma opção: ").strip()
 
-        if escolha == "1":
-            registrar_novo_certificado()
-            input("\nPressione Enter para continuar...")
-        elif escolha == "2":
-            ranking_empresas()
-            input("\nPressione Enter para continuar...")
-        elif escolha == "3":
-            validar_certificados_automaticamente()
-            input("\nPressione Enter para continuar...")
-        elif escolha == "4":
-            print("Retornando ao menu principal...")
-            break
-        else:
-            print("❌ Opção inválida. Por favor, escolha de 1 a 4.")
-            input("\nPressione Enter para continuar...")
+            if opcao == "1":
+                registrar_novo_certificado()
+            elif opcao == "2":
+                ranking_empresas()
+            elif opcao == "3":
+                listar_certificados_publicos()
+            elif opcao == "4":
+                return
+            elif opcao == "0":
+                log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+                sys.exit(0)
+            else:
+                log_validacao("Opção inválida! Tente novamente.")
+                input("\nPressione Enter para continuar...")
+
+        except KeyboardInterrupt:
+            log_info("\nOperação cancelada. Voltando ao menu principal...")
+            return

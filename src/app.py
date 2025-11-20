@@ -1,59 +1,55 @@
 from empresas import menu_empresas
-from usuarios import menu_usuarios 
-from auth import login, menu_auth 
+from usuarios import menu_usuarios
 from certificados import menu_certificados
+from auth import menu_auth
+from chatbot import iniciar_chat
+from utils import entrada_segura, log_info, log_validacao
+
 
 def menu_principal(usuario):
-    
-    papel = usuario.get("papel", "Leitor")
-
+    """Menu principal do sistema."""
     while True:
-        print("\n" + "=" * 60)
-        print(f"🌐 CADEIA ESG CONECTADA | Usuário: {usuario['nome']} ({papel})")
-        print("=" * 60)
-        print("1. Gerenciar Empresas")
-        
-        if papel == "Admin":
-            print("2. Gerenciar Usuários")
-            
-        print("3. Gerenciar Certificados")
-        print("4. Autenticação")
-        print("0. Sair do Sistema")
-        print("-" * 60)
+        try:
+            log_info("\n" + "=" * 60)
+            log_info(f"CADEIA ESG CONECTADA | Usuário: {usuario['nome']}")
+            log_info("=" * 60)
+            log_info("1. Gerenciar Empresas")
+            log_info("2. Gerenciar Usuários")
+            log_info("3. Gerenciar Certificados")
+            log_info("4. Autenticação")
+            log_info("5. ChatBot de Ajuda")
+            log_info("0. Sair do Sistema")
+            log_info("-" * 60)
 
-        opcao = input("Escolha uma opção: ").strip()
+            opcao = entrada_segura("Escolha uma opção: ").strip()
 
-        if opcao == "1":
-            menu_empresas()
-            input("\nPressione Enter para voltar ao menu principal...")
-            
-        elif opcao == "2":
-            if papel == "Admin":
-                menu_usuarios() 
-                input("\nPressione Enter para voltar ao menu principal...")
+            if opcao == "1":
+                menu_empresas()
+            elif opcao == "2":
+                menu_usuarios()
+            elif opcao == "3":
+                menu_certificados()
+            elif opcao == "4":
+                novo_usuario = menu_auth(exibir_opcoes_navegacao=True)
+                if novo_usuario:
+                    usuario = novo_usuario
+            elif opcao == "5":
+                iniciar_chat()
+            elif opcao == "0":
+                log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
+                break
             else:
-                print("❌ Acesso negado. Você não tem permissão.")
+                log_validacao("Opção inválida! Tente novamente.")
                 input("\nPressione Enter para continuar...")
-                
-        elif opcao == "3":
-            menu_certificados() 
-            
-        elif opcao == "4":
-            novo_usuario = menu_auth(exibir_opcoes_navegacao=True)
-            if novo_usuario:
-                usuario = novo_usuario
-                papel = usuario.get("papel", "Leitor")
-            input("\nPressione Enter para voltar ao menu principal...")
-            
-        elif opcao == "0":
-            print("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
-            break
-        else:
-            print("❌ Opção inválida! Tente novamente.")
-            input("\nPressione Enter para continuar...")
+        except KeyboardInterrupt:
+            log_info("\nOperação cancelada. Voltando ao menu principal...")
+            return
+
 
 if __name__ == "__main__":
     usuario_logado = menu_auth()
-    
+
     if usuario_logado:
         menu_principal(usuario_logado)
+    else:
+        log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
