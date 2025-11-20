@@ -250,13 +250,21 @@ def atualizar_empresa():
         else:
             log_info(f"Contato mantido como '{empresa['contato_empresarial']}'.")
 
-        novo_email = entrada_segura(
-            f"Email Empresarial [{empresa['email_empresarial']}]: "
-        ).strip()
-        if novo_email:
+        while True:
+            novo_email = (
+                entrada_segura(f"Email Empresarial [{empresa['email_empresarial']}]: ")
+                .lower()
+                .strip()
+            )
+            if not novo_email:
+                log_info(f"Email mantido como '{empresa['email_empresarial']}'.")
+                break
+            valido, mensagem = validar_email(novo_email)
+            if not valido:
+                log_validacao(mensagem)
+                continue
             empresa["email_empresarial"] = novo_email
-        else:
-            log_info(f"Email mantido como '{empresa['email_empresarial']}'.")
+            break
 
         novo_responsavel = (
             entrada_segura(f"Nome do Responsável [{empresa['nome_responsavel']}]: ")

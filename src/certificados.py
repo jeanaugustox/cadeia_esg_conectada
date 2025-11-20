@@ -224,9 +224,8 @@ def menu_certificados():
             log_info("=" * 60)
             log_info("1. Registrar Novo Certificado")
             log_info("2. Ver Ranking de Empresas (Total de Certificados)")
-            log_info("3. Validar Certificados (Vencimento)")
-            log_info("4. Ver Certificados Públicos")
-            log_info("5. Voltar ao Menu Principal")
+            log_info("3. Ver Certificados Públicos")
+            log_info("4. Voltar ao Menu Principal")
             log_info("0. Sair do Sistema")
             log_info("-" * 60)
 

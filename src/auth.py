@@ -11,6 +11,7 @@ from utils import (
     log_info,
     log_validacao,
     validar_senha,
+    validar_email,
 )
 
 
@@ -21,7 +22,14 @@ def esqueci_senha():
         log_info("=" * 60)
 
         nome = entrada_segura("Nome de usuário: ")
-        email = entrada_segura("Email cadastrado: ").lower()
+
+        while True:
+            email = entrada_segura("Email cadastrado: ").lower().strip()
+            valido, mensagem = validar_email(email)
+            if not valido:
+                log_validacao(mensagem)
+                continue
+            break
 
         usuarios = carregar_usuarios()
         usuario_encontrado = None

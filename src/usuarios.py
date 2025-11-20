@@ -16,23 +16,15 @@ from utils import (
 
 ARQUIVO_USUARIOS = "data/usuarios.json"
 
-# ================ CARREGAR USUÁRIOS ================ #
-
 
 def carregar_usuarios():
     """Carrega usuários do arquivo JSON."""
     return carregar_arquivo_json(ARQUIVO_USUARIOS)
 
 
-# ================ SALVAR USUÁRIOS ================ #
-
-
 def salvar_usuarios(usuarios):
     """Salva usuários no arquivo JSON."""
     return salvar_arquivo_json(ARQUIVO_USUARIOS, usuarios)
-
-
-# ================ CADASTRAR USUÁRIOS ================ #
 
 
 def cadastrar_usuario_publico():
@@ -246,9 +238,6 @@ def cadastrar_usuario():
         return False
 
 
-# ================ LISTAR USUÁRIOS ================ #
-
-
 def listar_usuarios_empresa(empresa_id: int):
     """
     Lista usuários de uma empresa específica.
@@ -296,9 +285,6 @@ def listar_usuarios():
         log_info("-" * 60)
 
 
-# ================ BUSCAR USUÁRIOS ================ #
-
-
 def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     usuarios = carregar_usuarios()
     usuario_encontrado = None
@@ -311,9 +297,6 @@ def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
             break
 
     return usuario_encontrado
-
-
-# ================ ATUALIZAR USUÁRIOS ================ #
 
 
 def atualizar_usuario():
@@ -336,27 +319,29 @@ def atualizar_usuario():
         )
         log_info("Deixe em branco para manter o valor atual.")
 
-        novo_nome = entrada_segura(
-            f"Nome [{usuario_para_editar['nome']}]: "
-        ).strip()
+        novo_nome = entrada_segura(f"Nome [{usuario_para_editar['nome']}]: ").strip()
         if novo_nome:
             usuario_para_editar["nome"] = novo_nome
         else:
             log_info(f"Nome mantido como '{usuario_para_editar['nome']}'.")
 
-        novo_email = (
-            entrada_segura(f"Email [{usuario_para_editar['email']}]: ")
-            .lower()
-            .strip()
-        )
-        if novo_email:
+        while True:
+            novo_email = (
+                entrada_segura(f"Email [{usuario_para_editar['email']}]: ")
+                .lower()
+                .strip()
+            )
+            if not novo_email:
+                log_info(f"Email mantido como '{usuario_para_editar['email']}'.")
+                break
+            valido, mensagem = validar_email(novo_email)
+            if not valido:
+                log_validacao(mensagem)
+                continue
             usuario_para_editar["email"] = novo_email
-        else:
-            log_info(f"Email mantido como '{usuario_para_editar['email']}'.")
+            break
 
-        nova_senha = entrada_segura(
-            "Senha (deixe em branco para manter): "
-        ).strip()
+        nova_senha = entrada_segura("Senha (deixe em branco para manter): ").strip()
         if nova_senha:
             valida, mensagem = validar_senha(nova_senha)
             if not valida:
@@ -385,9 +370,6 @@ def atualizar_usuario():
     except ValueError:
         log_validacao("ID inválido!")
         return False
-
-
-# ================ EXCLUIR USUÁRIOS ================ #
 
 
 def excluir_usuario():
@@ -436,9 +418,6 @@ def excluir_usuario():
     except ValueError:
         log_validacao("ID inválido!")
         return False
-
-
-# ================ MENU DE USUÁRIOS ================ #
 
 
 def menu_usuarios():
