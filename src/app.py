@@ -43,5 +43,5 @@ def menu_principal():
 
 
 if __name__ == "__main__":
-    if menu_auth():
-        menu_principal()
+    menu_auth()
+    menu_principal()
