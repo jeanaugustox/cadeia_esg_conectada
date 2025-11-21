@@ -1,5 +1,4 @@
 import sys
-from usuarios import listar_usuarios_empresa
 from utils import (
     entrada_segura,
     carregar_arquivo_json,
@@ -416,6 +415,9 @@ def listar_usuarios_da_empresa():
     Lista usuários de uma empresa específica.
     """
     try:
+        # Import local para evitar import circular no carregamento do módulo
+        from usuarios import listar_usuarios_empresa
+
         empresa_id = int(
             entrada_segura("Digite o ID da empresa para listar seus usuários: ").strip()
         )
