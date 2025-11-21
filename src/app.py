@@ -3,7 +3,7 @@ from usuarios import menu_usuarios
 from certificados import menu_certificados
 from auth import menu_auth
 from chatbot import iniciar_chat
-from utils import entrada_segura, log_info, log_validacao
+from utils import entrada_segura, log_info, log_validacao, limpa_terminal
 
 
 def menu_principal(usuario):
@@ -22,6 +22,7 @@ def menu_principal(usuario):
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 menu_empresas()

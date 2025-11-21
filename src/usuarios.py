@@ -12,6 +12,8 @@ from utils import (
     formatar_data,
     validar_senha,
     validar_email,
+    gerar_hash,
+    limpa_terminal,
 )
 
 ARQUIVO_USUARIOS = "data/usuarios.json"
@@ -111,7 +113,7 @@ def cadastrar_usuario_publico():
             "id": gerar_id(usuarios),
             "nome": nome,
             "email": email,
-            "senha": senha,
+            "senha_hash": gerar_hash(senha),
             "papel": papel,
             "data_cadastro": formatar_data(),
             "ativo": True,
@@ -217,7 +219,7 @@ def cadastrar_usuario():
             "id": gerar_id(usuarios),
             "nome": nome,
             "email": email,
-            "senha": senha,
+            "senha_hash": gerar_hash(senha),
             "papel": papel,
             "data_cadastro": formatar_data(),
             "ativo": True,
@@ -243,7 +245,8 @@ def listar_usuarios_empresa(empresa_id: int):
     Lista usuários de uma empresa específica.
     """
     usuarios = carregar_usuarios()
-    usuarios_empresa = [u for u in usuarios if u.get("empresa_id") == empresa_id]
+    usuarios_empresa = [u for u in usuarios if u.get(
+        "empresa_id") == empresa_id]
 
     if not usuarios_empresa:
         log_info("Nenhum usuário encontrado para esta empresa.")
@@ -305,7 +308,8 @@ def atualizar_usuario():
     """
     try:
         usuario_id = int(
-            entrada_segura("Digite o ID do usuário que deseja atualizar: ").strip()
+            entrada_segura(
+                "Digite o ID do usuário que deseja atualizar: ").strip()
         )
 
         usuario_para_editar = buscar_usuario_por_id(usuario_id)
@@ -319,7 +323,8 @@ def atualizar_usuario():
         )
         log_info("Deixe em branco para manter o valor atual.")
 
-        novo_nome = entrada_segura(f"Nome [{usuario_para_editar['nome']}]: ").strip()
+        novo_nome = entrada_segura(
+            f"Nome [{usuario_para_editar['nome']}]: ").strip()
         if novo_nome:
             usuario_para_editar["nome"] = novo_nome
         else:
@@ -332,7 +337,8 @@ def atualizar_usuario():
                 .strip()
             )
             if not novo_email:
-                log_info(f"Email mantido como '{usuario_para_editar['email']}'.")
+                log_info(
+                    f"Email mantido como '{usuario_para_editar['email']}'.")
                 break
             valido, mensagem = validar_email(novo_email)
             if not valido:
@@ -341,13 +347,17 @@ def atualizar_usuario():
             usuario_para_editar["email"] = novo_email
             break
 
-        nova_senha = entrada_segura("Senha (deixe em branco para manter): ").strip()
+        nova_senha = entrada_segura(
+            "Senha (deixe em branco para manter): ").strip()
         if nova_senha:
             valida, mensagem = validar_senha(nova_senha)
             if not valida:
                 log_validacao(mensagem)
                 return False
-            usuario_para_editar["senha"] = nova_senha
+            usuario_para_editar["senha_hash"] = gerar_hash(
+                nova_senha)
+            if "senha" in usuario_para_editar:
+                del usuario_para_editar["senha"]
         else:
             log_info("Senha mantida (campo deixado em branco).")
 
@@ -378,7 +388,8 @@ def excluir_usuario():
     """
     try:
         usuario_id = int(
-            entrada_segura("Digite o ID do usuário que deseja excluir: ").strip()
+            entrada_segura(
+                "Digite o ID do usuário que deseja excluir: ").strip()
         )
 
         usuario = buscar_usuario_por_id(usuario_id)
@@ -438,6 +449,7 @@ def menu_usuarios():
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 cadastrar_usuario()

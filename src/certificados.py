@@ -8,6 +8,7 @@ from utils import (
     log_info,
     log_validacao,
     validar_formato_data,
+    limpa_terminal,
 )
 
 
@@ -59,7 +60,8 @@ def registrar_novo_certificado():
 
         while True:
             certificado = (
-                entrada_segura("Digite o nome do seu certificado ESG: ").strip().title()
+                entrada_segura(
+                    "Digite o nome do seu certificado ESG: ").strip().title()
             )
             if not certificado:
                 log_validacao("Nome do certificado é obrigatório!")
@@ -230,6 +232,7 @@ def menu_certificados():
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 registrar_novo_certificado()

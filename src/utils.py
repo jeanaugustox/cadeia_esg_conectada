@@ -2,14 +2,21 @@
 import json
 import os
 import re
+import hashlib
+import binascii
 from datetime import datetime
+
+import getpass
 
 
 def entrada_segura(mensagem: str):
     """
     Solicita entrada e permite cancelar a operação a qualquer momento.
     """
-    resposta = input(mensagem).strip()
+    if "senha" in mensagem.lower():
+        resposta = getpass.getpass(mensagem).strip()
+    else:
+        resposta = input(mensagem).strip()
     if resposta.lower() in ["cancelar", "sair", "exit", "stop"]:
         raise KeyboardInterrupt("Operação cancelada pelo usuário.")
     return resposta
@@ -132,3 +139,45 @@ def validar_email(email: str) -> tuple[bool, str]:
         return False, "Formato de email inválido!"
 
     return True, ""
+
+
+def gerar_hash(password: str, iterations: int = 200_000) -> str:
+    """
+    Gera hash de senha usando PBKDF2-HMAC-SHA256 com salt aleatório.
+    Formato: pbkdf2_sha256$<iterations>$<salt_hex>$<hash_hex>
+    """
+    if not isinstance(password, str):
+        raise TypeError("password deve ser string")
+    salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, iterations)
+    return "pbkdf2_sha256${}${}${}".format(
+        iterations, binascii.hexlify(
+            salt).decode(), binascii.hexlify(dk).decode()
+    )
+
+
+def verifica_senha(password: str, stored: str) -> bool:
+    """
+    Verifica senha em texto contra hash armazenado (formato acima).
+    """
+    if not stored or not isinstance(stored, str) or not stored.startswith("pbkdf2_sha256$"):
+        return False
+    try:
+        _, iter_str, salt_hex, hash_hex = stored.split("$", 3)
+        iterations = int(iter_str)
+        salt = binascii.unhexlify(salt_hex.encode())
+        dk = hashlib.pbkdf2_hmac(
+            "sha256", password.encode("utf-8"), salt, iterations)
+        dk_hex = binascii.hexlify(dk).decode()
+        # Comparação em string para evitar diferenças de tipo/encoding
+        import hmac as _hmac
+
+        return _hmac.compare_digest(dk_hex, hash_hex)
+    except Exception:
+        return False
+
+
+def limpa_terminal():
+    """Limpa o terminal (Windows e Unix)."""
+    os.system("cls" if os.name == "nt" else "clear")

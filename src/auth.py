@@ -12,6 +12,9 @@ from utils import (
     log_validacao,
     validar_senha,
     validar_email,
+    gerar_hash,
+    verifica_senha,
+    limpa_terminal,
 )
 
 
@@ -60,11 +63,14 @@ def esqueci_senha():
     # Atualiza a senha no array e salva
     for i in range(len(usuarios)):
         if usuarios[i].get("id") == usuario_encontrado.get("id"):
-            usuarios[i]["senha"] = nova_senha
+            usuarios[i]["senha_hash"] = gerar_hash(nova_senha)
+            if "senha" in usuarios[i]:
+                del usuarios[i]["senha"]
             break
 
     if salvar_usuarios(usuarios):
-        log_sucesso("Senha atualizada com sucesso! Faça login com a nova senha.")
+        log_sucesso(
+            "Senha atualizada com sucesso! Faça login com a nova senha.")
         return True
     else:
         log_erro("Erro ao atualizar senha!")
@@ -86,7 +92,13 @@ def login():
 
             for usuario in usuarios:
                 nome_ok = usuario.get("nome") == nome
-                senha_ok = usuario.get("senha") == senha
+                # Suporta senha hash (preferencial) e texto claro (pré-migração)
+                senha_ok = False
+                if "senha_hash" in usuario:
+                    senha_ok = verifica_senha(
+                        senha, usuario.get("senha_hash", ""))
+                else:
+                    senha_ok = usuario.get("senha") == senha
                 ativo_ok = usuario.get("ativo", True)
 
                 if nome_ok and senha_ok and ativo_ok:
@@ -105,6 +117,7 @@ def login():
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ")
+            limpa_terminal()
 
             if opcao == "1":
                 continue
@@ -139,6 +152,7 @@ def menu_auth(exibir_opcoes_navegacao: bool = False):
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ")
+            limpa_terminal()
 
             if opcao == "1":
                 usuario_logado = login()

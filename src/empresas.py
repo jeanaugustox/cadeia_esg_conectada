@@ -11,6 +11,7 @@ from utils import (
     formatar_data,
     validar_senha,
     validar_email,
+    limpa_terminal,
 )
 
 ARQUIVO_EMPRESAS = "data/empresas.json"
@@ -60,7 +61,8 @@ def cadastrar_empresa():
         ).strip()
 
         while True:
-            email_empresarial = entrada_segura("Email Empresarial: ").lower().strip()
+            email_empresarial = entrada_segura(
+                "Email Empresarial: ").lower().strip()
             valido, mensagem = validar_email(email_empresarial)
             if not valido:
                 log_validacao(mensagem)
@@ -68,7 +70,8 @@ def cadastrar_empresa():
             break
 
         while True:
-            email_confirmacao = entrada_segura("Confirmação de Email: ").lower().strip()
+            email_confirmacao = entrada_segura(
+                "Confirmação de Email: ").lower().strip()
             valido, mensagem = validar_email(email_confirmacao)
             if not valido:
                 log_validacao(mensagem)
@@ -79,7 +82,8 @@ def cadastrar_empresa():
             break
 
         while True:
-            nome_responsavel = entrada_segura("Nome do Responsável: ").title().strip()
+            nome_responsavel = entrada_segura(
+                "Nome do Responsável: ").title().strip()
             if not nome_responsavel:
                 log_validacao("Nome do responsável é obrigatório!")
                 continue
@@ -201,7 +205,8 @@ def buscar_empresas_por_nome():
                 empresas_encontradas.append(empresa)
 
         if empresas_encontradas:
-            log_info(f"EMPRESAS ENCONTRADAS ({len(empresas_encontradas)} empresas)")
+            log_info(
+                f"EMPRESAS ENCONTRADAS ({len(empresas_encontradas)} empresas)")
             log_info("-" * 60)
             for empresa in empresas_encontradas:
                 log_info(f"ID: {empresa['id']}")
@@ -222,7 +227,8 @@ def atualizar_empresa():
     """
     try:
         empresa_id = int(
-            entrada_segura("Digite o ID da empresa que deseja atualizar: ").strip()
+            entrada_segura(
+                "Digite o ID da empresa que deseja atualizar: ").strip()
         )
 
         empresa = buscar_empresa_por_id(empresa_id)
@@ -247,16 +253,19 @@ def atualizar_empresa():
         if novo_contato:
             empresa["contato_empresarial"] = novo_contato
         else:
-            log_info(f"Contato mantido como '{empresa['contato_empresarial']}'.")
+            log_info(
+                f"Contato mantido como '{empresa['contato_empresarial']}'.")
 
         while True:
             novo_email = (
-                entrada_segura(f"Email Empresarial [{empresa['email_empresarial']}]: ")
+                entrada_segura(
+                    f"Email Empresarial [{empresa['email_empresarial']}]: ")
                 .lower()
                 .strip()
             )
             if not novo_email:
-                log_info(f"Email mantido como '{empresa['email_empresarial']}'.")
+                log_info(
+                    f"Email mantido como '{empresa['email_empresarial']}'.")
                 break
             valido, mensagem = validar_email(novo_email)
             if not valido:
@@ -266,14 +275,16 @@ def atualizar_empresa():
             break
 
         novo_responsavel = (
-            entrada_segura(f"Nome do Responsável [{empresa['nome_responsavel']}]: ")
+            entrada_segura(
+                f"Nome do Responsável [{empresa['nome_responsavel']}]: ")
             .title()
             .strip()
         )
         if novo_responsavel:
             empresa["nome_responsavel"] = novo_responsavel
         else:
-            log_info(f"Responsável mantido como '{empresa['nome_responsavel']}'.")
+            log_info(
+                f"Responsável mantido como '{empresa['nome_responsavel']}'.")
 
         novo_usuario = (
             entrada_segura(f"Nome de Usuário [{empresa['nome_usuario']}]: ")
@@ -287,7 +298,8 @@ def atualizar_empresa():
 
         log_info("\nEDITANDO ENDEREÇO")
         novo_logradouro = (
-            entrada_segura(f"Logradouro [{empresa['endereco']['logradouro']}]: ")
+            entrada_segura(
+                f"Logradouro [{empresa['endereco']['logradouro']}]: ")
             .title()
             .strip()
         )
@@ -337,7 +349,8 @@ def atualizar_empresa():
             log_info(f"Estado mantido como '{empresa['endereco']['estado']}'.")
 
         nova_observacao = (
-            entrada_segura(f"Observações [{empresa['observacoes']}]: ").title().strip()
+            entrada_segura(
+                f"Observações [{empresa['observacoes']}]: ").title().strip()
         )
         if nova_observacao:
             empresa["observacoes"] = nova_observacao
@@ -371,7 +384,8 @@ def excluir_empresa():
     """
     try:
         empresa_id = int(
-            entrada_segura("Digite o ID da empresa que deseja excluir: ").strip()
+            entrada_segura(
+                "Digite o ID da empresa que deseja excluir: ").strip()
         )
 
         empresa = buscar_empresa_por_id(empresa_id)
@@ -419,7 +433,8 @@ def listar_usuarios_da_empresa():
         from usuarios import listar_usuarios_empresa
 
         empresa_id = int(
-            entrada_segura("Digite o ID da empresa para listar seus usuários: ").strip()
+            entrada_segura(
+                "Digite o ID da empresa para listar seus usuários: ").strip()
         )
 
         empresa = buscar_empresa_por_id(empresa_id)
@@ -457,6 +472,7 @@ def menu_empresas():
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 cadastrar_empresa()
