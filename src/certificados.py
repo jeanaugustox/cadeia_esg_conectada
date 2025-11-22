@@ -1,5 +1,5 @@
 import sys
-from empresas import carregar_empresas, salvar_empresas
+from empresas import carregar_empresas, salvar_empresas, buscar_empresa_por_id
 from collections import Counter
 from utils import (
     entrada_segura,
@@ -7,10 +7,15 @@ from utils import (
     log_erro,
     log_info,
     log_validacao,
+    validar_formato_data,
+    limpa_terminal,
 )
 
 
 def registrar_novo_certificado():
+    """
+    Registra um novo certificado para uma empresa.
+    """
     try:
         log_info("\n" + "=" * 60)
         log_info("REGISTRAR NOVO CERTIFICADO")
@@ -29,15 +34,7 @@ def registrar_novo_certificado():
                 log_validacao("ID inválido!")
                 continue
 
-            empresa_encontrada = None
-            indice_empresa = -1
-
-            for i in range(len(empresas)):
-                if empresas[i].get("id") == empresa_id:
-                    empresa_encontrada = empresas[i]
-                    indice_empresa = i
-                    break
-
+            empresa_encontrada = buscar_empresa_por_id(empresa_id)
             if not empresa_encontrada:
                 log_validacao("Empresa não encontrada com este ID.")
                 continue
@@ -49,6 +46,11 @@ def registrar_novo_certificado():
                 )
                 continue
 
+            indice_empresa = -1
+            for i in range(len(empresas)):
+                if empresas[i].get("id") == empresa_id:
+                    indice_empresa = i
+                    break
             break
 
         log_info(
@@ -58,7 +60,8 @@ def registrar_novo_certificado():
 
         while True:
             certificado = (
-                entrada_segura("Digite o nome do seu certificado ESG: ").strip().title()
+                entrada_segura(
+                    "Digite o nome do seu certificado ESG: ").strip().title()
             )
             if not certificado:
                 log_validacao("Nome do certificado é obrigatório!")
@@ -92,6 +95,11 @@ def registrar_novo_certificado():
             if not validade:
                 log_validacao("Data de validade é obrigatória!")
                 continue
+            if not validar_formato_data(validade):
+                log_validacao(
+                    "Formato de data inválido! Use DD/MM/AAAA (ex: 31/12/2024)"
+                )
+                continue
             break
 
         while True:
@@ -101,13 +109,19 @@ def registrar_novo_certificado():
             if not emissao:
                 log_validacao("Data de emissão é obrigatória!")
                 continue
+            if not validar_formato_data(emissao):
+                log_validacao(
+                    "Formato de data inválido! Use DD/MM/AAAA (ex: 31/12/2024)"
+                )
+                continue
             break
 
         if "certificados" not in empresa_encontrada:
             empresa_encontrada["certificados"] = []
 
+        certificados_existentes = empresa_encontrada.get("certificados", [])
         novo_registro = {
-            "certificado_id": len(empresa_encontrada.get("certificados", [])) + 1,
+            "certificado_id": len(certificados_existentes) + 1,
             "nome_certificado": certificado,
             "categoria": categoria,
             "emitido_por": emitido,
@@ -143,13 +157,15 @@ def ranking_empresas():
         log_erro("Nenhuma empresa registrada para o ranking.")
         return
 
+    empresas = [e for e in empresas if e.get("ativo", True)]
+
+    if not empresas:
+        log_erro("Nenhuma empresa encontrada.")
+        return
+
     lista_nomes_empresas = []
     for empresa in empresas:
-        if not empresa.get("ativo", True):
-            continue
-
         nome_empresa = empresa.get("nome_empresa", "Empresa Desconhecida")
-
         for cert in empresa.get("certificados", []):
             lista_nomes_empresas.append(nome_empresa)
 
@@ -165,7 +181,44 @@ def ranking_empresas():
         log_info(f"{i:<5} | {empresa:<30} | {contagem:<20}")
 
 
+def listar_certificados_publicos():
+    """
+    Lista certificados públicos de todas as empresas.
+    Mostra apenas nome da empresa, nome do certificado, categoria e validade.
+    """
+    empresas = carregar_empresas()
+    empresas_ativas = [e for e in empresas if e.get("ativo", True)]
+
+    if not empresas_ativas:
+        log_erro("Nenhuma empresa cadastrada.")
+        return
+
+    log_info("\n" + "=" * 60)
+    log_info("CERTIFICADOS PÚBLICOS")
+    log_info("=" * 60)
+
+    encontrou_algum = False
+    for empresa in empresas_ativas:
+        certificados = empresa.get("certificados", [])
+        if certificados:
+            encontrou_algum = True
+            log_info(f"\nEmpresa: {empresa['nome_empresa']}")
+            for cert in certificados:
+                log_info(
+                    f"  - {cert.get('nome_certificado', 'N/A')} "
+                    f"({cert.get('categoria', 'N/A')}) - "
+                    f"Validade: {cert.get('data_validade', 'N/A')}"
+                )
+            log_info("-" * 60)
+
+    if not encontrou_algum:
+        log_erro("Nenhum certificado encontrado.")
+
+
 def menu_certificados():
+    """
+    Menu principal do módulo de certificados.
+    """
     while True:
         try:
             log_info("\n" + "=" * 60)
@@ -173,17 +226,21 @@ def menu_certificados():
             log_info("=" * 60)
             log_info("1. Registrar Novo Certificado")
             log_info("2. Ver Ranking de Empresas (Total de Certificados)")
-            log_info("3. Voltar ao Menu Principal")
+            log_info("3. Ver Certificados Públicos")
+            log_info("4. Voltar ao Menu Principal")
             log_info("0. Sair do Sistema")
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 registrar_novo_certificado()
             elif opcao == "2":
                 ranking_empresas()
             elif opcao == "3":
+                listar_certificados_publicos()
+            elif opcao == "4":
                 return
             elif opcao == "0":
                 log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")

@@ -1,15 +1,17 @@
 from empresas import menu_empresas
 from usuarios import menu_usuarios
+from certificados import menu_certificados
 from auth import menu_auth
 from chatbot import iniciar_chat
-from utils import entrada_segura, log_info, log_validacao
+from utils import entrada_segura, log_info, log_validacao, limpa_terminal
 
 
-def menu_principal():
+def menu_principal(usuario):
+    """Menu principal do sistema."""
     while True:
         try:
             log_info("\n" + "=" * 60)
-            log_info("CADEIA ESG CONECTADA")
+            log_info(f"CADEIA ESG CONECTADA | Usuário: {usuario['nome']}")
             log_info("=" * 60)
             log_info("1. Gerenciar Empresas")
             log_info("2. Gerenciar Usuários")
@@ -19,17 +21,19 @@ def menu_principal():
             log_info("0. Sair do Sistema")
             log_info("-" * 60)
 
-            opcao = entrada_segura("Escolha uma opção: ")
+            opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 menu_empresas()
             elif opcao == "2":
                 menu_usuarios()
             elif opcao == "3":
-                log_info("Módulo de Certificados")
-                input("Pressione Enter para continuar...")
+                menu_certificados()
             elif opcao == "4":
-                menu_auth(exibir_opcoes_navegacao=True)
+                novo_usuario = menu_auth(exibir_opcoes_navegacao=True)
+                if novo_usuario:
+                    usuario = novo_usuario
             elif opcao == "5":
                 iniciar_chat()
             elif opcao == "0":
@@ -37,11 +41,16 @@ def menu_principal():
                 break
             else:
                 log_validacao("Opção inválida! Tente novamente.")
-                input("Pressione Enter para continuar...")
+                input("\nPressione Enter para continuar...")
         except KeyboardInterrupt:
             log_info("\nOperação cancelada. Voltando ao menu principal...")
+            return
 
 
 if __name__ == "__main__":
-    menu_auth()
-    menu_principal()
+    usuario_logado = menu_auth()
+
+    if usuario_logado:
+        menu_principal(usuario_logado)
+    else:
+        log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")

@@ -9,6 +9,9 @@ from utils import (
     log_validacao,
     gerar_id,
     formatar_data,
+    validar_senha,
+    validar_email,
+    limpa_terminal,
 )
 
 ARQUIVO_EMPRESAS = "data/empresas.json"
@@ -25,6 +28,9 @@ def salvar_empresas(empresas):
 
 
 def cadastrar_empresa():
+    """
+    Cadastra uma nova empresa.
+    """
     try:
         log_info("\n" + "=" * 60)
         log_info("CADASTRO DE EMPRESA")
@@ -55,16 +61,20 @@ def cadastrar_empresa():
         ).strip()
 
         while True:
-            email_empresarial = entrada_segura("Email Empresarial: ").lower().strip()
-            if not email_empresarial:
-                log_validacao("Email empresarial é obrigatório!")
+            email_empresarial = entrada_segura(
+                "Email Empresarial: ").lower().strip()
+            valido, mensagem = validar_email(email_empresarial)
+            if not valido:
+                log_validacao(mensagem)
                 continue
             break
 
         while True:
-            email_confirmacao = entrada_segura("Confirmação de Email: ").lower().strip()
-            if not email_confirmacao:
-                log_validacao("Confirmação de email é obrigatória!")
+            email_confirmacao = entrada_segura(
+                "Confirmação de Email: ").lower().strip()
+            valido, mensagem = validar_email(email_confirmacao)
+            if not valido:
+                log_validacao(mensagem)
                 continue
             if email_empresarial != email_confirmacao:
                 log_validacao("Emails não coincidem!")
@@ -72,7 +82,8 @@ def cadastrar_empresa():
             break
 
         while True:
-            nome_responsavel = entrada_segura("Nome do Responsável: ").title().strip()
+            nome_responsavel = entrada_segura(
+                "Nome do Responsável: ").title().strip()
             if not nome_responsavel:
                 log_validacao("Nome do responsável é obrigatório!")
                 continue
@@ -86,11 +97,9 @@ def cadastrar_empresa():
 
         while True:
             senha = entrada_segura("Senha: ").strip()
-            if not senha:
-                log_validacao("Senha é obrigatória!")
-                continue
-            if len(senha) < 6:
-                log_validacao("Senha deve ter pelo menos 6 caracteres!")
+            valida, mensagem = validar_senha(senha)
+            if not valida:
+                log_validacao(mensagem)
                 continue
             break
 
@@ -145,6 +154,9 @@ def cadastrar_empresa():
 
 
 def listar_empresas():
+    """
+    Lista todas as empresas cadastradas.
+    """
     empresas = carregar_empresas()
 
     if not empresas:
@@ -176,6 +188,9 @@ def buscar_empresa_por_id(empresa_id: int):
 
 
 def buscar_empresas_por_nome():
+    """
+    Busca empresas por nome.
+    """
     try:
         search = entrada_segura("Digite o nome da empresa: ").title().strip()
         empresas = carregar_empresas()
@@ -186,11 +201,12 @@ def buscar_empresas_por_nome():
             return
 
         for empresa in empresas:
-            if search in empresa["nome_empresa"]:
+            if search.lower() in empresa["nome_empresa"].lower():
                 empresas_encontradas.append(empresa)
 
         if empresas_encontradas:
-            log_info(f"EMPRESAS ENCONTRADAS ({len(empresas_encontradas)} empresas)")
+            log_info(
+                f"EMPRESAS ENCONTRADAS ({len(empresas_encontradas)} empresas)")
             log_info("-" * 60)
             for empresa in empresas_encontradas:
                 log_info(f"ID: {empresa['id']}")
@@ -206,9 +222,13 @@ def buscar_empresas_por_nome():
 
 
 def atualizar_empresa():
+    """
+    Atualiza dados de uma empresa existente.
+    """
     try:
         empresa_id = int(
-            entrada_segura("Digite o ID da empresa que deseja atualizar: ").strip()
+            entrada_segura(
+                "Digite o ID da empresa que deseja atualizar: ").strip()
         )
 
         empresa = buscar_empresa_por_id(empresa_id)
@@ -233,25 +253,38 @@ def atualizar_empresa():
         if novo_contato:
             empresa["contato_empresarial"] = novo_contato
         else:
-            log_info(f"Contato mantido como '{empresa['contato_empresarial']}'.")
+            log_info(
+                f"Contato mantido como '{empresa['contato_empresarial']}'.")
 
-        novo_email = entrada_segura(
-            f"Email Empresarial [{empresa['email_empresarial']}]: "
-        ).strip()
-        if novo_email:
+        while True:
+            novo_email = (
+                entrada_segura(
+                    f"Email Empresarial [{empresa['email_empresarial']}]: ")
+                .lower()
+                .strip()
+            )
+            if not novo_email:
+                log_info(
+                    f"Email mantido como '{empresa['email_empresarial']}'.")
+                break
+            valido, mensagem = validar_email(novo_email)
+            if not valido:
+                log_validacao(mensagem)
+                continue
             empresa["email_empresarial"] = novo_email
-        else:
-            log_info(f"Email mantido como '{empresa['email_empresarial']}'.")
+            break
 
         novo_responsavel = (
-            entrada_segura(f"Nome do Responsável [{empresa['nome_responsavel']}]: ")
+            entrada_segura(
+                f"Nome do Responsável [{empresa['nome_responsavel']}]: ")
             .title()
             .strip()
         )
         if novo_responsavel:
             empresa["nome_responsavel"] = novo_responsavel
         else:
-            log_info(f"Responsável mantido como '{empresa['nome_responsavel']}'.")
+            log_info(
+                f"Responsável mantido como '{empresa['nome_responsavel']}'.")
 
         novo_usuario = (
             entrada_segura(f"Nome de Usuário [{empresa['nome_usuario']}]: ")
@@ -265,7 +298,8 @@ def atualizar_empresa():
 
         log_info("\nEDITANDO ENDEREÇO")
         novo_logradouro = (
-            entrada_segura(f"Logradouro [{empresa['endereco']['logradouro']}]: ")
+            entrada_segura(
+                f"Logradouro [{empresa['endereco']['logradouro']}]: ")
             .title()
             .strip()
         )
@@ -315,7 +349,8 @@ def atualizar_empresa():
             log_info(f"Estado mantido como '{empresa['endereco']['estado']}'.")
 
         nova_observacao = (
-            entrada_segura(f"Observações [{empresa['observacoes']}]: ").title().strip()
+            entrada_segura(
+                f"Observações [{empresa['observacoes']}]: ").title().strip()
         )
         if nova_observacao:
             empresa["observacoes"] = nova_observacao
@@ -344,9 +379,13 @@ def atualizar_empresa():
 
 
 def excluir_empresa():
+    """
+    Exclui (desativa) uma empresa.
+    """
     try:
         empresa_id = int(
-            entrada_segura("Digite o ID da empresa que deseja excluir: ").strip()
+            entrada_segura(
+                "Digite o ID da empresa que deseja excluir: ").strip()
         )
 
         empresa = buscar_empresa_por_id(empresa_id)
@@ -385,7 +424,38 @@ def excluir_empresa():
         return False
 
 
+def listar_usuarios_da_empresa():
+    """
+    Lista usuários de uma empresa específica.
+    """
+    try:
+        # Import local para evitar import circular no carregamento do módulo
+        from usuarios import listar_usuarios_empresa
+
+        empresa_id = int(
+            entrada_segura(
+                "Digite o ID da empresa para listar seus usuários: ").strip()
+        )
+
+        empresa = buscar_empresa_por_id(empresa_id)
+        if not empresa:
+            log_erro("Empresa não encontrada!")
+            return
+
+        log_info(f"\nUSUÁRIOS DA EMPRESA: {empresa['nome_empresa']}")
+        log_info("=" * 60)
+        listar_usuarios_empresa(empresa_id)
+
+    except KeyboardInterrupt as e:
+        log_info(f"\n{e}\nVoltando ao menu principal...")
+    except ValueError:
+        log_validacao("ID inválido!")
+
+
 def menu_empresas():
+    """
+    Menu principal do módulo de empresas.
+    """
     while True:
         try:
             log_info("\n" + "=" * 60)
@@ -396,11 +466,13 @@ def menu_empresas():
             log_info("3. Buscar Empresa por Nome")
             log_info("4. Atualizar Empresa")
             log_info("5. Excluir Empresa")
-            log_info("6. Voltar ao Menu Principal")
+            log_info("6. Listar Usuários da Empresa")
+            log_info("7. Voltar ao Menu Principal")
             log_info("0. Sair do Sistema")
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 cadastrar_empresa()
@@ -413,6 +485,8 @@ def menu_empresas():
             elif opcao == "5":
                 excluir_empresa()
             elif opcao == "6":
+                listar_usuarios_da_empresa()
+            elif opcao == "7":
                 return
             elif opcao == "0":
                 log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
@@ -423,3 +497,4 @@ def menu_empresas():
 
         except KeyboardInterrupt:
             log_info("\nOperação cancelada. Voltando ao menu principal...")
+            return

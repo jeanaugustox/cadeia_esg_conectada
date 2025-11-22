@@ -1,4 +1,5 @@
 import sys
+from empresas import carregar_empresas, buscar_empresa_por_id
 from utils import (
     entrada_segura,
     carregar_arquivo_json,
@@ -9,11 +10,13 @@ from utils import (
     log_validacao,
     gerar_id,
     formatar_data,
+    validar_senha,
+    validar_email,
+    gerar_hash,
+    limpa_terminal,
 )
 
 ARQUIVO_USUARIOS = "data/usuarios.json"
-
-# ================ CARREGAR USUÁRIOS ================ #
 
 
 def carregar_usuarios():
@@ -21,18 +24,16 @@ def carregar_usuarios():
     return carregar_arquivo_json(ARQUIVO_USUARIOS)
 
 
-# ================ SALVAR USUÁRIOS ================ #
-
-
 def salvar_usuarios(usuarios):
     """Salva usuários no arquivo JSON."""
     return salvar_arquivo_json(ARQUIVO_USUARIOS, usuarios)
 
 
-# ================ CADASTRAR USUÁRIOS ================ #
-
-
-def cadastrar_usuario():
+def cadastrar_usuario_publico():
+    """
+    Cadastra um novo usuário no sistema (cadastro público).
+    Usado no menu de autenticação para novos usuários.
+    """
     try:
         log_info("\n" + "=" * 60)
         log_info("CADASTRO DE USUÁRIO")
@@ -52,41 +53,73 @@ def cadastrar_usuario():
 
         while True:
             email = entrada_segura("Email: ").lower().strip()
-            if not email:
-                log_validacao("Email é obrigatório!")
+            valido, mensagem = validar_email(email)
+            if not valido:
+                log_validacao(mensagem)
                 continue
             break
 
         while True:
             senha = entrada_segura("Senha: ").strip()
-            if not senha:
-                log_validacao("Senha é obrigatória!")
-                continue
-            if len(senha) < 6:
-                log_validacao("Senha deve ter pelo menos 6 caracteres!")
+            valida, mensagem = validar_senha(senha)
+            if not valida:
+                log_validacao(mensagem)
                 continue
             break
 
-        papeis_validos = ["Admin", "Editor", "Leitor"]
+        papeis_validos = ["Admin", "Editor", "Leitor", "Publico"]
         while True:
-            papel = entrada_segura("Papel (Admin / Editor / Leitor): ").title().strip()
+            papel = (
+                entrada_segura("Papel (Admin / Editor / Leitor / Publico): ")
+                .title()
+                .strip()
+            )
             if not papel:
                 log_validacao("Papel é obrigatório!")
                 continue
             if papel not in papeis_validos:
-                log_validacao("Papel inválido. Opções válidas: Admin, Editor, Leitor.")
+                log_validacao(
+                    "Papel inválido. Opções válidas: Admin, Editor, Leitor, Publico."
+                )
                 continue
             break
+
+        # Público não precisa de empresa_id
+        empresa_id = None
+        if papel in ["Editor", "Leitor"]:
+            log_info("\nSelecione a empresa do usuário:")
+            empresas = carregar_empresas()
+            empresas_ativas = [e for e in empresas if e.get("ativo", True)]
+            if not empresas_ativas:
+                log_erro("Nenhuma empresa ativa cadastrada!")
+                return False
+
+            for emp in empresas_ativas:
+                log_info(f"ID: {emp['id']} - {emp['nome_empresa']}")
+
+            while True:
+                try:
+                    empresa_id = int(entrada_segura("ID da empresa: ").strip())
+                    empresa = buscar_empresa_por_id(empresa_id)
+                    if not empresa or not empresa.get("ativo", True):
+                        log_validacao("Empresa não encontrada ou inativa!")
+                        continue
+                    break
+                except ValueError:
+                    log_validacao("ID inválido!")
+                    continue
 
         novo_usuario = {
             "id": gerar_id(usuarios),
             "nome": nome,
             "email": email,
-            "senha": senha,
+            "senha_hash": gerar_hash(senha),
             "papel": papel,
             "data_cadastro": formatar_data(),
             "ativo": True,
         }
+        if empresa_id is not None:
+            novo_usuario["empresa_id"] = empresa_id
 
         usuarios.append(novo_usuario)
         if salvar_usuarios(usuarios):
@@ -101,7 +134,137 @@ def cadastrar_usuario():
         return False
 
 
-# ================ LISTAR USUÁRIOS ================ #
+def cadastrar_usuario():
+    """
+    Cadastra um novo usuário no sistema.
+    """
+    try:
+        log_info("\n" + "=" * 60)
+        log_info("CADASTRO DE USUÁRIO")
+        log_info("=" * 60)
+
+        usuarios = carregar_usuarios()
+
+        while True:
+            nome = entrada_segura("Nome de usuário: ").strip()
+            if not nome:
+                log_validacao("Nome de usuário é obrigatório!")
+                continue
+            if any(u.get("nome") == nome for u in usuarios):
+                log_validacao("Usuário já existe!")
+                continue
+            break
+
+        while True:
+            email = entrada_segura("Email: ").lower().strip()
+            valido, mensagem = validar_email(email)
+            if not valido:
+                log_validacao(mensagem)
+                continue
+            break
+
+        while True:
+            senha = entrada_segura("Senha: ").strip()
+            valida, mensagem = validar_senha(senha)
+            if not valida:
+                log_validacao(mensagem)
+                continue
+            break
+
+        papeis_validos = ["Admin", "Editor", "Leitor", "Publico"]
+        while True:
+            papel = (
+                entrada_segura(f"Papel ({' / '.join(papeis_validos)}): ")
+                .title()
+                .strip()
+            )
+            if not papel:
+                log_validacao("Papel é obrigatório!")
+                continue
+            if papel not in papeis_validos:
+                log_validacao(
+                    f"Papel inválido. Opções válidas: {', '.join(papeis_validos)}."
+                )
+                continue
+            break
+
+        # Determinar empresa_id (opcional)
+        empresa_id = None
+        if papel in ["Editor", "Leitor"]:
+            log_info("\nSelecione a empresa do usuário (opcional):")
+            empresas = carregar_empresas()
+            empresas_ativas = [e for e in empresas if e.get("ativo", True)]
+            if empresas_ativas:
+                for emp in empresas_ativas:
+                    log_info(f"ID: {emp['id']} - {emp['nome_empresa']}")
+
+                while True:
+                    try:
+                        resposta = entrada_segura(
+                            "ID da empresa (ou Enter para pular): "
+                        ).strip()
+                        if not resposta:
+                            break
+                        empresa_id = int(resposta)
+                        empresa = buscar_empresa_por_id(empresa_id)
+                        if not empresa or not empresa.get("ativo", True):
+                            log_validacao("Empresa não encontrada ou inativa!")
+                            continue
+                        break
+                    except ValueError:
+                        log_validacao("ID inválido!")
+                        continue
+
+        novo_usuario = {
+            "id": gerar_id(usuarios),
+            "nome": nome,
+            "email": email,
+            "senha_hash": gerar_hash(senha),
+            "papel": papel,
+            "data_cadastro": formatar_data(),
+            "ativo": True,
+        }
+        if empresa_id is not None:
+            novo_usuario["empresa_id"] = empresa_id
+
+        usuarios.append(novo_usuario)
+        if salvar_usuarios(usuarios):
+            log_sucesso(f"Usuário '{nome}' cadastrado com sucesso!")
+            return True
+        else:
+            log_erro("Erro ao salvar usuário!")
+            return False
+
+    except KeyboardInterrupt as e:
+        log_info(f"\n{e}\nVoltando ao menu principal...")
+        return False
+
+
+def listar_usuarios_empresa(empresa_id: int):
+    """
+    Lista usuários de uma empresa específica.
+    """
+    usuarios = carregar_usuarios()
+    usuarios_empresa = [u for u in usuarios if u.get(
+        "empresa_id") == empresa_id]
+
+    if not usuarios_empresa:
+        log_info("Nenhum usuário encontrado para esta empresa.")
+        return
+
+    log_info(f"\nUSUÁRIOS DA EMPRESA ({len(usuarios_empresa)} usuários)")
+    log_info("-" * 60)
+
+    for u in usuarios_empresa:
+        usuario_ativo = u.get("ativo", True)
+        status = "✅ Ativo" if usuario_ativo else "❌ Inativo"
+        log_info(f"ID: {u['id']}")
+        log_info(f"Nome: {u['nome']}")
+        log_info(f"Papel: {u['papel']}")
+        if "data_cadastro" in u:
+            log_info(f"Data Cadastro: {u['data_cadastro']}")
+        log_info(f"Status: {status}")
+        log_info("-" * 60)
 
 
 def listar_usuarios():
@@ -125,9 +288,6 @@ def listar_usuarios():
         log_info("-" * 60)
 
 
-# ================ BUSCAR USUÁRIOS ================ #
-
-
 def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     usuarios = carregar_usuarios()
     usuario_encontrado = None
@@ -142,58 +302,69 @@ def buscar_usuario_por_id(usuario_id: int, incluir_inativos: bool = False):
     return usuario_encontrado
 
 
-# ================ ATUALIZAR USUÁRIOS ================ #
-
-
 def atualizar_usuario():
+    """
+    Atualiza dados de um usuário existente.
+    """
     try:
         usuario_id = int(
-            entrada_segura("Digite o ID do usuário que deseja atualizar: ").strip()
+            entrada_segura(
+                "Digite o ID do usuário que deseja atualizar: ").strip()
         )
 
-        usuario = buscar_usuario_por_id(usuario_id)
-        if not usuario:
+        usuario_para_editar = buscar_usuario_por_id(usuario_id)
+        if not usuario_para_editar:
             log_erro("Usuário não encontrado!")
             return False
 
-        log_info(f"\nEDITANDO USUÁRIO: {usuario['nome']}")
+        log_info(
+            f"\nEDITANDO USUÁRIO: {usuario_para_editar['nome']} "
+            f"({usuario_para_editar.get('papel')})"
+        )
         log_info("Deixe em branco para manter o valor atual.")
 
-        novo_nome = entrada_segura(f"Nome [{usuario['nome']}]: ").strip()
+        novo_nome = entrada_segura(
+            f"Nome [{usuario_para_editar['nome']}]: ").strip()
         if novo_nome:
-            usuario["nome"] = novo_nome
+            usuario_para_editar["nome"] = novo_nome
         else:
-            log_info(f"Nome mantido como '{usuario['nome']}'.")
+            log_info(f"Nome mantido como '{usuario_para_editar['nome']}'.")
 
-        novo_email = entrada_segura(f"Email [{usuario['email']}]: ").lower().strip()
-        if novo_email:
-            usuario["email"] = novo_email
-        else:
-            log_info(f"Email mantido como '{usuario['email']}'.")
+        while True:
+            novo_email = (
+                entrada_segura(f"Email [{usuario_para_editar['email']}]: ")
+                .lower()
+                .strip()
+            )
+            if not novo_email:
+                log_info(
+                    f"Email mantido como '{usuario_para_editar['email']}'.")
+                break
+            valido, mensagem = validar_email(novo_email)
+            if not valido:
+                log_validacao(mensagem)
+                continue
+            usuario_para_editar["email"] = novo_email
+            break
 
-        nova_senha = entrada_segura("Senha (deixe em branco para manter): ").strip()
+        nova_senha = entrada_segura(
+            "Senha (deixe em branco para manter): ").strip()
         if nova_senha:
-            if len(nova_senha) < 6:
-                log_validacao("Senha deve ter pelo menos 6 caracteres!")
+            valida, mensagem = validar_senha(nova_senha)
+            if not valida:
+                log_validacao(mensagem)
                 return False
-            usuario["senha"] = nova_senha
+            usuario_para_editar["senha_hash"] = gerar_hash(
+                nova_senha)
+            if "senha" in usuario_para_editar:
+                del usuario_para_editar["senha"]
         else:
             log_info("Senha mantida (campo deixado em branco).")
 
-        papeis_validos = ["Admin", "Editor", "Leitor"]
-        novo_papel = entrada_segura(f"Papel [{usuario['papel']}]: ").title().strip()
-        if novo_papel:
-            if novo_papel not in papeis_validos:
-                log_validacao("Papel inválido. Opções válidas: Admin, Editor, Leitor.")
-                return False
-            usuario["papel"] = novo_papel
-        else:
-            log_info(f"Papel mantido como '{usuario['papel']}'.")
-
         usuarios = carregar_usuarios()
         for i in range(len(usuarios)):
-            if usuarios[i].get("id") == usuario["id"]:
-                usuarios[i] = usuario
+            if usuarios[i].get("id") == usuario_para_editar["id"]:
+                usuarios[i] = usuario_para_editar
                 break
 
         if salvar_usuarios(usuarios):
@@ -211,13 +382,14 @@ def atualizar_usuario():
         return False
 
 
-# ================ EXCLUIR USUÁRIOS ================ #
-
-
 def excluir_usuario():
+    """
+    Exclui (desativa) um usuário.
+    """
     try:
         usuario_id = int(
-            entrada_segura("Digite o ID do usuário que deseja excluir: ").strip()
+            entrada_segura(
+                "Digite o ID do usuário que deseja excluir: ").strip()
         )
 
         usuario = buscar_usuario_por_id(usuario_id)
@@ -259,10 +431,10 @@ def excluir_usuario():
         return False
 
 
-# ================ MENU DE USUÁRIOS ================ #
-
-
 def menu_usuarios():
+    """
+    Menu principal do módulo de usuários.
+    """
     while True:
         try:
             log_info("\n" + "=" * 60)
@@ -277,6 +449,7 @@ def menu_usuarios():
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ").strip()
+            limpa_terminal()
 
             if opcao == "1":
                 cadastrar_usuario()
@@ -297,3 +470,4 @@ def menu_usuarios():
 
         except KeyboardInterrupt:
             log_info("\nOperação cancelada. Voltando ao menu principal...")
+            return

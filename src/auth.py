@@ -1,11 +1,20 @@
 import sys
-from usuarios import carregar_usuarios, salvar_usuarios, cadastrar_usuario
+from usuarios import (
+    carregar_usuarios,
+    salvar_usuarios,
+    cadastrar_usuario_publico,
+)
 from utils import (
     entrada_segura,
     log_sucesso,
     log_erro,
     log_info,
     log_validacao,
+    validar_senha,
+    validar_email,
+    gerar_hash,
+    verifica_senha,
+    limpa_terminal,
 )
 
 
@@ -16,7 +25,14 @@ def esqueci_senha():
         log_info("=" * 60)
 
         nome = entrada_segura("Nome de usuário: ")
-        email = entrada_segura("Email cadastrado: ").lower()
+
+        while True:
+            email = entrada_segura("Email cadastrado: ").lower().strip()
+            valido, mensagem = validar_email(email)
+            if not valido:
+                log_validacao(mensagem)
+                continue
+            break
 
         usuarios = carregar_usuarios()
         usuario_encontrado = None
@@ -35,8 +51,9 @@ def esqueci_senha():
 
         while True:
             nova_senha = entrada_segura("Nova senha (mín. 6 caracteres): ")
-            if len(nova_senha) < 6:
-                log_validacao("Senha muito curta. Tente novamente.")
+            valida, mensagem = validar_senha(nova_senha)
+            if not valida:
+                log_validacao(mensagem)
                 continue
             break
     except KeyboardInterrupt as e:
@@ -46,11 +63,14 @@ def esqueci_senha():
     # Atualiza a senha no array e salva
     for i in range(len(usuarios)):
         if usuarios[i].get("id") == usuario_encontrado.get("id"):
-            usuarios[i]["senha"] = nova_senha
+            usuarios[i]["senha_hash"] = gerar_hash(nova_senha)
+            if "senha" in usuarios[i]:
+                del usuarios[i]["senha"]
             break
 
     if salvar_usuarios(usuarios):
-        log_sucesso("Senha atualizada com sucesso! Faça login com a nova senha.")
+        log_sucesso(
+            "Senha atualizada com sucesso! Faça login com a nova senha.")
         return True
     else:
         log_erro("Erro ao atualizar senha!")
@@ -71,13 +91,23 @@ def login():
             usuario_valido = None
 
             for usuario in usuarios:
-                if usuario.get("nome") == nome and usuario.get("senha") == senha:
+                nome_ok = usuario.get("nome") == nome
+                # Suporta senha hash (preferencial) e texto claro (pré-migração)
+                senha_ok = False
+                if "senha_hash" in usuario:
+                    senha_ok = verifica_senha(
+                        senha, usuario.get("senha_hash", ""))
+                else:
+                    senha_ok = usuario.get("senha") == senha
+                ativo_ok = usuario.get("ativo", True)
+
+                if nome_ok and senha_ok and ativo_ok:
                     usuario_valido = usuario
                     break
 
             if usuario_valido:
                 log_sucesso(f"Bem-vindo(a), {usuario_valido.get('nome')}!")
-                return True
+                return usuario_valido
 
             log_erro("Credenciais inválidas ou usuário inativo.")
             log_info("-" * 60)
@@ -87,6 +117,7 @@ def login():
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ")
+            limpa_terminal()
 
             if opcao == "1":
                 continue
@@ -101,7 +132,7 @@ def login():
                 input("\nPressione Enter para continuar...")
         except KeyboardInterrupt as e:
             log_info(f"\n{e}\nVoltando ao menu principal...")
-            return False
+            return None
 
 
 def menu_auth(exibir_opcoes_navegacao: bool = False):
@@ -114,22 +145,26 @@ def menu_auth(exibir_opcoes_navegacao: bool = False):
             log_info("2. Cadastrar Usuário")
             log_info("3. Esqueci a Senha")
             if exibir_opcoes_navegacao:
-                log_info("6. Voltar ao Menu Principal")
+                log_info("4. Voltar ao Menu Principal")
+                log_info("0. Sair do Sistema")
+            else:
                 log_info("0. Sair do Sistema")
             log_info("-" * 60)
 
             opcao = entrada_segura("Escolha uma opção: ")
+            limpa_terminal()
 
             if opcao == "1":
-                if login():
-                    return True
+                usuario_logado = login()
+                if usuario_logado:
+                    return usuario_logado
             elif opcao == "2":
-                cadastrar_usuario()
+                cadastrar_usuario_publico()
             elif opcao == "3":
                 esqueci_senha()
-            elif exibir_opcoes_navegacao and opcao == "6":
-                return False
-            elif exibir_opcoes_navegacao and opcao == "0":
+            elif exibir_opcoes_navegacao and opcao == "4":
+                return None
+            elif opcao == "0":
                 log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
                 sys.exit(0)
             else:
@@ -137,4 +172,4 @@ def menu_auth(exibir_opcoes_navegacao: bool = False):
                 input("\nPressione Enter para continuar...")
         except KeyboardInterrupt:
             log_info("\nOperação cancelada. Voltando ao menu principal...")
-            return False
+            return None

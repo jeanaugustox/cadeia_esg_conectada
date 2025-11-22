@@ -2,18 +2,18 @@
   {
     "id": 1,
     "nome": "igoor",
-    "senha": "senha123",
     "papel": "Admin",
     "data_cadastro": "01/11/2025 07:52:50",
-    "ativo": true
+    "ativo": true,
+    "senha_hash": "pbkdf2_sha256$200000$a30a93c324705cb74c003aa418ce1a71$14da97728a7518884f3050586e3dc05de27afde0a17a4839f63b18fa96b18951"
   },
   {
     "id": 2,
     "nome": "jean",
     "email": "jasm2@cesar.school",
-    "senha": "123456",
     "papel": "Admin",
     "data_cadastro": "18/11/2025 00:06:21",
-    "ativo": true
+    "ativo": true,
+    "senha_hash": "pbkdf2_sha256$200000$6b4f7ddb582420402441dbb1fa07e6c2$42e238822941ad0f9ca7cf0f3dcf8c292ebd93a49e1efeaabcdff510b4366f07"
   }
 ]
