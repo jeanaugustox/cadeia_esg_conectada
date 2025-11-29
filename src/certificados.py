@@ -219,6 +219,7 @@ def menu_certificados():
     """
     Menu principal do módulo de certificados.
     """
+
     while True:
         try:
             log_info("\n" + "=" * 60)

@@ -46,5 +46,29 @@
     "observacoes": "123123123",
     "data_cadastro": "01/11/2025 07:46:00",
     "ativo": true
+  },
+  {
+    "id": 3,
+    "nome_empresa": "Empresa Verde Mais",
+    "cnpj": "00192920120121212",
+    "contato_empresarial": "8392930203",
+    "email_empresarial": "empresa@empresa.com",
+    "nome_responsavel": "Igor",
+    "cpf_responsavel": "9003344434223",
+    "outro_contato": "",
+    "nome_usuario": "igor",
+    "senha": "senha@123",
+    "endereco": {
+      "cep": "50332399",
+      "logradouro": "Rua Empresa",
+      "numero": "12",
+      "complemento": "Perto Dda Empresa",
+      "bairro": "Empresa",
+      "cidade": "Empresa",
+      "estado": "EMPRESA"
+    },
+    "observacoes": "",
+    "data_cadastro": "29/11/2025 07:51:26",
+    "ativo": true
   }
 ]

@@ -6,12 +6,14 @@ from chatbot import iniciar_chat
 from utils import entrada_segura, log_info, log_validacao, limpa_terminal
 
 
-def menu_principal(usuario):
+def menu_principal():
     """Menu principal do sistema."""
+    limpa_terminal()
+
     while True:
         try:
             log_info("\n" + "=" * 60)
-            log_info(f"CADEIA ESG CONECTADA | Usuário: {usuario['nome']}")
+            log_info(f"CADEIA ESG CONECTADA")
             log_info("=" * 60)
             log_info("1. Gerenciar Empresas")
             log_info("2. Gerenciar Usuários")
@@ -51,6 +53,6 @@ if __name__ == "__main__":
     usuario_logado = menu_auth()
 
     if usuario_logado:
-        menu_principal(usuario_logado)
+        menu_principal()
     else:
         log_info("\n👋 Obrigado por usar o Cadeia ESG Conectada!")
