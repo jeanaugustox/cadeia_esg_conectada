@@ -138,6 +138,8 @@ def login():
 def menu_auth(exibir_opcoes_navegacao: bool = False):
     while True:
         try:
+            limpa_terminal()
+
             log_info("\n" + "=" * 60)
             log_info("MÓDULO DE AUTENTICAÇÃO")
             log_info("=" * 60)
