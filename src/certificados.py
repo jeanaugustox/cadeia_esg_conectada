@@ -108,10 +108,8 @@ def registrar_novo_certificado():
                 continue
             break
 
-        # Recarrega empresas para garantir dados atualizados
         empresas = carregar_empresas()
 
-        # Encontra o índice da empresa na lista
         indice_empresa = -1
         for i in range(len(empresas)):
             if empresas[i].get("id") == empresa_id:
@@ -122,7 +120,6 @@ def registrar_novo_certificado():
             log_erro("Erro ao localizar empresa na lista.")
             return False
 
-        # Garante que o campo "certificados" existe
         if "certificados" not in empresas[indice_empresa]:
             empresas[indice_empresa]["certificados"] = []
 
@@ -171,14 +168,12 @@ def ranking_empresas():
         log_erro("Nenhuma empresa encontrada.")
         return
 
-    # Conta certificados de todas as empresas (incluindo 0)
     ranking_dados = []
     for empresa in empresas_ativas:
         nome_empresa = empresa.get("nome_empresa", "Empresa Desconhecida")
         quantidade_certificados = len(empresa.get("certificados", []))
         ranking_dados.append((nome_empresa, quantidade_certificados))
 
-    # Ordena por quantidade de certificados (maior para menor)
     ranking_dados.sort(key=lambda x: x[1], reverse=True)
 
     log_info(f"{'Pos.':<5} | {'Empresa':<30} | {'Qtd. Certificados':<20}")
