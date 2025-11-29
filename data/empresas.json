@@ -21,7 +21,33 @@
     },
     "observacoes": "Empresa focada em soluções sustentáveis",
     "data_cadastro": "15/12/2024 10:30:00",
-    "ativo": true
+    "ativo": true,
+    "certificados": [
+      {
+        "certificado_id": 1,
+        "nome_certificado": "Verde Mais",
+        "categoria": "Sustentabilidade",
+        "emitido_por": "Brasil",
+        "data_validade": "22/01/2030",
+        "data_emissao": "01/01/2025"
+      },
+      {
+        "certificado_id": 2,
+        "nome_certificado": "Verde Mais",
+        "categoria": "Sustentabilidade",
+        "emitido_por": "Brasil",
+        "data_validade": "22/01/2030",
+        "data_emissao": "01/01/2025"
+      },
+      {
+        "certificado_id": 3,
+        "nome_certificado": "Verde Mais",
+        "categoria": "Sustentabilidade",
+        "emitido_por": "Brasil",
+        "data_validade": "22/01/2030",
+        "data_emissao": "01/01/2025"
+      }
+    ]
   },
   {
     "id": 2,
@@ -69,6 +95,24 @@
     },
     "observacoes": "",
     "data_cadastro": "29/11/2025 07:51:26",
-    "ativo": true
+    "ativo": true,
+    "certificados": [
+      {
+        "certificado_id": 1,
+        "nome_certificado": "Verde Mais",
+        "categoria": "Sustentabilidade",
+        "emitido_por": "Brasil",
+        "data_validade": "22/01/2030",
+        "data_emissao": "01/01/2025"
+      },
+      {
+        "certificado_id": 2,
+        "nome_certificado": "Verde Mais",
+        "categoria": "Sustentabilidade",
+        "emitido_por": "Brasil",
+        "data_validade": "22/01/2030",
+        "data_emissao": "01/01/2025"
+      }
+    ]
   }
 ]

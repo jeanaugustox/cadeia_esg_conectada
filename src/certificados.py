@@ -1,6 +1,5 @@
 import sys
 from empresas import carregar_empresas, salvar_empresas, buscar_empresa_por_id
-from collections import Counter
 from utils import (
     entrada_segura,
     log_sucesso,
@@ -20,8 +19,6 @@ def registrar_novo_certificado():
         log_info("\n" + "=" * 60)
         log_info("REGISTRAR NOVO CERTIFICADO")
         log_info("=" * 60)
-
-        empresas = carregar_empresas()
 
         while True:
             try:
@@ -46,11 +43,6 @@ def registrar_novo_certificado():
                 )
                 continue
 
-            indice_empresa = -1
-            for i in range(len(empresas)):
-                if empresas[i].get("id") == empresa_id:
-                    indice_empresa = i
-                    break
             break
 
         log_info(
@@ -116,10 +108,23 @@ def registrar_novo_certificado():
                 continue
             break
 
-        if "certificados" not in empresa_encontrada:
-            empresa_encontrada["certificados"] = []
+        empresas = carregar_empresas()
 
-        certificados_existentes = empresa_encontrada.get("certificados", [])
+        indice_empresa = -1
+        for i in range(len(empresas)):
+            if empresas[i].get("id") == empresa_id:
+                indice_empresa = i
+                break
+
+        if indice_empresa == -1:
+            log_erro("Erro ao localizar empresa na lista.")
+            return False
+
+        if "certificados" not in empresas[indice_empresa]:
+            empresas[indice_empresa]["certificados"] = []
+
+        certificados_existentes = empresas[indice_empresa].get(
+            "certificados", [])
         novo_registro = {
             "certificado_id": len(certificados_existentes) + 1,
             "nome_certificado": certificado,
@@ -157,27 +162,23 @@ def ranking_empresas():
         log_erro("Nenhuma empresa registrada para o ranking.")
         return
 
-    empresas = [e for e in empresas if e.get("ativo", True)]
+    empresas_ativas = [e for e in empresas if e.get("ativo", True)]
 
-    if not empresas:
+    if not empresas_ativas:
         log_erro("Nenhuma empresa encontrada.")
         return
 
-    lista_nomes_empresas = []
-    for empresa in empresas:
+    ranking_dados = []
+    for empresa in empresas_ativas:
         nome_empresa = empresa.get("nome_empresa", "Empresa Desconhecida")
-        for cert in empresa.get("certificados", []):
-            lista_nomes_empresas.append(nome_empresa)
+        quantidade_certificados = len(empresa.get("certificados", []))
+        ranking_dados.append((nome_empresa, quantidade_certificados))
 
-    if not lista_nomes_empresas:
-        log_erro("Nenhum certificado registrado no sistema.")
-        return
-
-    ranking = Counter(lista_nomes_empresas)
+    ranking_dados.sort(key=lambda x: x[1], reverse=True)
 
     log_info(f"{'Pos.':<5} | {'Empresa':<30} | {'Qtd. Certificados':<20}")
     log_info("-" * 60)
-    for i, (empresa, contagem) in enumerate(ranking.most_common(), 1):
+    for i, (empresa, contagem) in enumerate(ranking_dados, 1):
         log_info(f"{i:<5} | {empresa:<30} | {contagem:<20}")
 
 
